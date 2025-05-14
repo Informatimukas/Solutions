@@ -52,10 +52,10 @@ int main()
         }
         int L = rig * k + ina[pnt];
         int R = lef * k + ina[pnt];
-        while (L % k == ina[Ask(L)])
+        while (L % k == ina[Ask(L)] && n - (L + 1) >= k)
             L++;
         L--;
-        while (R % k == inb[Ask(R)])
+        while (R % k == inb[Ask(R)] && R >= k)
             R--;
         R++;
         if (L + 1 == R)
