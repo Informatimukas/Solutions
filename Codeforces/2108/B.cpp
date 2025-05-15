@@ -32,7 +32,7 @@ int main()
             int lft = n - __builtin_popcount(x);
             int res = x;
             if (lft % 2 == 0) res += lft;
-            else if (n % 2 == x % 2) res += n - x;
+            else if (n % 2 == x % 2) res += n - x % 2;
             else {
                 res += lft / 2 * 2;
                 res += 4;
