@@ -11,86 +11,49 @@ int T;
 int n;
 vector <int> neigh[Maxn];
 bool rem[Maxn];
-int L[Maxn], P[Maxn][Maxk];
+int L[Maxn], P[Maxn];
 vector <iii> res;
 
-void Traverse(int v)
+void getLevels(int v)
 {
     for (int i = 0; i < neigh[v].size(); i++) {
         int u = neigh[v][i];
-        if (P[v][0] == u) continue;
-        P[u][0] = v;
+        if (u == P[v]) continue;
+        P[u] = v;
         L[u] = L[v] + 1;
-        Traverse(u);
+        getLevels(u);
     }
 }
 
-int getLCA(int a, int b)
+ii Traverse(int v, int p)
 {
-    if (L[a] < L[b])
-        swap(a, b);
-    for (int i = Maxk - 1; i >= 0; i--)
-        if (L[a] - (1 << i) >= L[b])
-            a = P[a][i];
-    if (a == b) return a;
-    for (int i = Maxk - 1; i >= 0; i--)
-        if (P[a][i] != P[b][i])
-            a = P[a][i], b = P[b][i];
-    return P[a][0];
-}
-
-int getDist(int a, int b)
-{
-    return L[a] + L[b] - 2 * L[getLCA(a, b)];
-}
-
-void Gather(int v, int p, vector <int> &seq)
-{
-    seq.push_back(v);
+    ii res = {0, v};
     for (int i = 0; i < neigh[v].size(); i++) {
         int u = neigh[v][i];
         if (u == p || rem[u]) continue;
-        Gather(u, v, seq);
+        ii got = Traverse(u, v);
+        res = max(res, {got.first + 1, got.second});
     }
+    return res;
 }
 
 void Solve(int v)
 {
-    vector <int> seq;
-    Gather(v, 0, seq);
-    sort(seq.begin(), seq.end());
-    int best = 0, A = seq[0];
-    for (int i = 0; i < seq.size(); i++) {
-        int cand = getDist(seq[0], seq[i]);
-        if (cand > best) {
-            best = cand;
-            A = seq[i];
-        }
-    }
-    best = 0;
-    int B = A;
-    for (int i = 0; i < seq.size(); i++) {
-        int cand = getDist(A, seq[i]);
-        if (cand > best) {
-            best = cand;
-            B = seq[i];
-        }
-    }
-    int pnt = int(seq.size()) - 1;
-    while (getDist(seq[pnt], A) != best && getDist(seq[pnt], B) != best)
-        pnt--;
-    int C = seq[pnt];
-    while (getDist(seq[pnt], C) != best)
-        pnt--;
-    int D = seq[pnt];
-    res.push_back({best + 1, {C, D}});
+    int A = Traverse(v, 0).second;
+    int B = Traverse(A, 0).second;
+    int C = Traverse(B, 0).second;
+    C = max(C, B);
+    ii d = Traverse(C, 0);
+    int D = d.second;
+    int dist = d.first;
+    res.push_back({dist + 1, {C, D}});
     vector <int> got;
     while (C != D) {
         if (L[C] < L[D])
             swap(C, D);
         got.push_back(C);
         rem[C] = true;
-        C = P[C][0];
+        C = P[C];
     }
     rem[C] = true;
     got.push_back(C);
@@ -115,10 +78,7 @@ int main()
             neigh[a].push_back(b);
             neigh[b].push_back(a);
         }
-        Traverse(1);
-        for (int j = 1; j < Maxk; j++)
-            for (int i = 1; i <= n; i++)
-                P[i][j] = P[P[i][j - 1]][j - 1];
+        getLevels(1);
         res.clear();
         Solve(1);
         sort(res.rbegin(), res.rend());
