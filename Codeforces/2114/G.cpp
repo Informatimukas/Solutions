@@ -1,20 +1,24 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+typedef long long ll;
+
 const int Maxn = 100005;
 
 int T;
 int n, k;
 int a[Maxn];
-int L[Maxn], R[Maxn], sL[Maxn], sR[Maxn];
+ll L[Maxn], R[Maxn], sL[Maxn], sR[Maxn];
 
-int Get(int x, int y)
+ll Get(int x, int y)
 {
     int tot = 1;
     while (x % 2 == 0 && x / 2 != y) {
         x /= 2;
         tot *= 2;
     }
+    if (x % 2 == 0 && x / 2 == y)
+        tot += ll(tot - 1) * (Get(x, 0) - 1);
     return tot;
 }
 
@@ -36,7 +40,7 @@ int main()
             }
         }
         R[n + 1] = 0;
-        int mx = 0;
+        ll mx = 0;
         for (int i = n; i > 0; i--) {
             R[i] = R[i + 1];
             sR[i] = R[i + 1];
