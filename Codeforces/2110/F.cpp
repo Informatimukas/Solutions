@@ -12,14 +12,21 @@ set <int> S;
 
 int Solve(int a, int res)
 {
-    for (auto it = S.rbegin(); it != S.rend() && *it > a && 2 * a - 1 > res; it++)
+    for (auto it = S.rbegin(); it != S.rend() && *it > a && *it > res; ++it)
         res = max(res, (*it) % a + a);
-    for (int i = 1; i <= a; i++) {
-        int lst = a / (i + 1) + 1;
-        if (lst + a % lst <= res) break;
+    for (int i = 1; i <= a; ) {
+    //    int mx = a / i;
+        int fir = a / (i + 1);
+        int lst = fir + 1;
+       // if (2 * mx - 1 <= res) break;
         auto it = S.lower_bound(lst);
         if (it != S.end())
             res = max(res, (*it) + a % (*it));
+        if (fir == 0) break;
+        i = a / fir;
+        if (it == S.begin()) break;
+        --it;
+        i = max(i, a / *it);
     }
     S.insert(a);
     return res;
