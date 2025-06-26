@@ -16,7 +16,6 @@ int Get(int r, int c) {
 }
 
 int Get(int r1, int c1, int r2, int c2) {
-    printf("Get(%d, %d, %d, %d)\n", r1, c1, r2, c2);
     return Get(r2, c2) - Get(r1 - 1, c2) - Get(r2, c1 - 1) + Get(r1 - 1, c1 - 1);
 }
 
@@ -26,15 +25,13 @@ int main() {
         scanf("%d %d %d", &n, &m, &k);
         for (int i = 1; i <= n; i++) {
             scanf("%s", B[i] + 1);
-            for (int j = 1; j <= m; j++) {
+            for (int j = 1; j <= m; j++)
                 G[i][j] = static_cast<int>(B[i][j] == 'g') + G[i - 1][j] + G[i][j - 1] - G[i - 1][j - 1];
-                printf("G[%d][%d] = %d\n", i, j, G[i][j]);
-            }
         }
         int res = 0;
         for (int i = 1; i <= n; i++)
             for (int j = 1; j <= m; j++) if (B[i][j] == '.')
-                res = max(res, Get(i - k, j - k, i + k, j + k) -
+                res = max(res, Get(1, 1, n, m) -
                     Get(i - k + 1, j - k + 1, i + k - 1, j + k - 1));
         printf("%d\n", res);
     }

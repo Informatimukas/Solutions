@@ -17,14 +17,14 @@ void Set(int v, int ind, int wh) {
 }
 
 void traverseSet(int v, int pind, int wh) {
-    st[v] = true;
+    st[v] = vis[v] = true;
     for (int i = 0; i < neigh[v].size(); i++) {
         auto &[u, ind] = neigh[v][i];
         if (ind == pind) continue;
         if (!vis[u]) {
             Set(v, ind, wh);
             traverseSet(u, ind, wh);
-        } else if (st[v])
+        } else if (st[u])
             Set(v, ind, wh);
     }
     st[v] = false;
@@ -50,7 +50,8 @@ int main() {
             int wh = 0;
             for (auto [u, ind] : neigh[i]) {
                 if (vis[u]) continue;
-                Set(u, ind, wh);
+                Set(i, ind, wh);
+                traverseSet(u, ind, wh);
                 wh = 1;
             }
         }
