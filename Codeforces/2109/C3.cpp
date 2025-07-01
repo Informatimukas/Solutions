@@ -39,11 +39,10 @@ int main()
     scanf("%d", &T);
     while (T--) {
         scanf("%d", &n);
-        Mult(9);
+        Mult(999999999);
         Digit();
-        Digit();
-        if (n != 9)
-            Add(n - 9);
+        if (n != 81)
+            Add(n - 81);
         Answer();
     }
     return 0;
