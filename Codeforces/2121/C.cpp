@@ -16,15 +16,15 @@ int main() {
         for (int i = 0; i < n; i++)
             for (int j = 0; j < m; j++) {
                 scanf("%d", &B[i][j]);
-                if (!cands.empty()) continue;
                 if (B[i][j] > mx) {
                     mx = B[i][j];
                     bi = -1;
                     bj = -1;
+                    cands.clear();
                 }
                 if (B[i][j] == mx)
                     if (bi != -1) {
-                        if (i != bi && j != bj) {
+                        if (cands.empty() && i != bi && j != bj) {
                             cands.emplace_back(i, bj);
                             cands.emplace_back(bi, j);
                         }
@@ -35,11 +35,11 @@ int main() {
             continue;
         }
         int res = 105;
-        for (int z = 0; z < cands.size(); z++) {
+        for (auto &[fst, snd] : cands) {
             int nmx = 0;
             for (int i = 0; i < n; i++)
                 for (int j = 0; j < m; j++) {
-                    int val = i == cands[z].first || j == cands[z].second? B[i][j] - 1: B[i][j];
+                    int val = i == fst || j == snd? B[i][j] - 1: B[i][j];
                     nmx = max(nmx, val);
                 }
             res = min(res, nmx);
