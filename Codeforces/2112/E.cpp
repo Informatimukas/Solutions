@@ -7,9 +7,7 @@ constexpr int Maxn = 500005;
 constexpr int Inf = 1000000000;
 
 vector<int> dvs[Maxn];
-ll dp[Maxn];
-int res[Maxn];
-int mn[Maxn];
+int dp[Maxn];
 int T;
 int m;
 
@@ -17,30 +15,18 @@ int main() {
     for (int i = 2; i < Maxn; i++)
         for (int j = i + i; j < Maxn; j += i)
             dvs[j].push_back(i);
-    dp[1] |= 1ll << 1;
+    dp[1] = 1;
     for (int i = 2; i < Maxn; i++) {
+        dp[i] = Inf;
         for (int j : dvs[i])
-            for (int k = 1; k <= 30; k++)
-                if (dp[j] & 1ll << k)
-                    dp[i] |= dp[i / j] << k - 1;
-        for (int j = 1; 1 << j < i; j++) {
-            int ind = i - (1 << j);
-            if (dp[ind] & 1ll << j)
-                dp[i] |= 1ll << j + 1;
-        }
-        int b = 1;
-        while (b <= 30 && !(dp[i] & 1ll << b))
-            b++;
-        res[i] = b;
-        if (i <= 10) {
-            printf("dp[%d] = %lld\n", i, dp[i]);
-            printf("res[%d] = %d\n", i, res[i]);
-        }
+            dp[i] = min(dp[i], dp[j] + dp[i / j] - 1);
+        if (i > 2)
+            dp[i] = min(dp[i], dp[i - 2] + 1);
     }
     scanf("%d", &T);
     while (T--) {
         scanf("%d", &m);
-        printf("%d\n", res[m]);
+        printf("%d\n", dp[m] >= Inf? -1: dp[m]);
     }
     return 0;
 }
