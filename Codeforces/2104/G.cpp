@@ -156,15 +156,57 @@ struct snode {         //////// VARIABLES
 
 constexpr int Maxn = 200005;
 sn LCT[Maxn];
+int cur;
+int n, q;
+int g[Maxn];
+
+void addEdge(int a, int b) {
+	if (connected(LCT[a], LCT[b])) {
+		LCT[a]->makeRoot();
+		LCT[b]->access();
+		LCT[a]->extra = {a, b};
+		LCT[a]->extraVal = LCT[b]->sum % 2;
+		cur += LCT[a]->extraVal;
+	} else {
+		link(LCT[b], LCT[a], true);
+		cur--;
+	}
+}
+
+void removeEdge(int a, int b) {
+	auto const &root = LCT[a]->getRoot();
+	ii got = root->extra;
+	root->extra = {-1, -1};
+	cur -= root->extraVal;
+	root->extraVal = 0;
+	if (ii{a, b} == got)
+		return;
+	cut(LCT[a], LCT[b]);
+	cur++;
+	if (got.first != -1)
+		addEdge(got.first, got.second);
+}
 
 int main() {
-	int n = 20;
+	scanf("%d %d", &n, &q);
 	for (int i = 0; i < n; i++)
 		LCT[i] = new snode(1);
-	LCT[0]->extra = {0, 0};
-	for (int i = n - 1; i > 0; i--)
-		link(LCT[i-1], LCT[i], true);
-	for (int i = n - 1; i >= 0; i--)
-		cout << LCT[i]->getRoot()->extra.first << "\n";
+	cur = n + n;
+	for (int i = 0; i < n; i++) {
+		scanf("%d", &g[i]);
+		g[i]--;
+		addEdge(i, g[i]);
+	}
+	while (q--) {
+		int x, y, k;
+		scanf("%d %d %d", &x, &y, &k);
+		x--; y--;
+		removeEdge(x, g[x]);
+		g[x] = y;
+		addEdge(x, g[x]);
+		if (k % 3 < 2) printf("%d\n", k % 3);
+		else if (cur % 2) printf("2\n");
+		else printf("1\n");
+	}
     return 0;
 }

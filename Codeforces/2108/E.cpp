@@ -27,6 +27,7 @@ void Traverse(int v) {
         P[u] = v;
         Traverse(u);
         cnt[v] += cnt[u];
+        dp[u][1].first += min(cnt[u] - 1, n - cnt[u]);
         dp[u][1] = max(dp[u][1], {dp[u][0].first, u});
         dp[u][0].first += min(cnt[u], n - 1 - cnt[u]);
         lli cand1 = {dp[u][0].first + dp[v][1].first, dp[v][1].second};
