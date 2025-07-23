@@ -40,25 +40,50 @@ void Swap(int v, int u) {
     res.emplace_back(v, u);
 }
 
-void moveMe(int v) {
-    if (my[v] == v) return;
-    int u = my[v];
-    int oth = *in[a[u]].begin() == u? *in[a[u]].rbegin(): *in[a[u]].begin();
-    Swap(oth, v);
-    moveMe(oth);
+int getOth(int v) { return *in[a[v]].begin() == v? *in[a[v]].rbegin(): *in[a[v]].begin(); }
+
+ii getEdges(int col) {
+    ii res = {0, 0};
+    int v = *in[col].begin();
+    int u = *in[col].rbegin();
+    if (my[v] != v) {
+        res.first++;
+        res.second = a[my[v]];
+    }
+    if (my[u] != u) {
+        res.first++;
+        res.second = a[my[u]];
+    }
+    return res;
+}
+
+int getFirst(int col) {
+    int v = *in[col].begin();
+    int u = *in[col].rbegin();
+    return my[v] != v? v: u;
+}
+
+int getLast(int col) {
+    int v = *in[col].begin();
+    int u = *in[col].rbegin();
+    return my[v] == v? v: u;
+}
+
+int getEnd(int cur, int prv) {
+    ii got = getEdges(cur);
+    if (got.first == 1)
+        return cur;
+    int v = *in[cur].begin();
+    int u = *in[cur].rbegin();
+    return getEnd(a[my[v]] == prv? a[my[u]]: a[my[v]], cur);
 }
 
 void Solve(int v) {
     if (v == my[v] || a[v] == a[my[v]])
         return;
-    int oth = *in[a[v]].begin() == v? *in[a[v]].rbegin(): *in[a[v]].begin();
+    int oth = getOth(v);
     Swap(my[v], oth);
-    if (my[oth] != oth)
-        Solve(oth);
-    else {
-        oth = *in[a[oth]].begin() == oth? *in[a[oth]].rbegin(): *in[a[oth]].begin();
-        moveMe(oth);
-    }
+    Solve(oth);
 }
 
 int main() {
@@ -83,6 +108,15 @@ int main() {
             neigh[b].push_back(a);
         }
         Traverse(1, 0);
+        for (int i = 1; i <= n / 2; i++) {
+            ii st = getEdges(i);
+            if (st.first == 1) {
+                int en = getEnd(st.second, i);
+                int f = getFirst(i);
+                Swap(f, getLast(en));
+                Solve(f);
+            }
+        }
         for (int i = 1; i <= n; i++)
             Solve(i);
         printf("%llu\n", res.size());
