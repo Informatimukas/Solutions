@@ -17,6 +17,58 @@ int A[Maxn];
 int B[Maxn];
 ii HA[Maxn], HB[Maxn];
 
+typedef struct item * pitem;
+struct item {
+    int prior;
+    ii value;
+    int cnt;
+    pitem l, r;
+    item(const ii &value = ii(0, 0)) {
+        prior = uniform_int_distribution(1, 1000000000)(rng);
+        this->value = value;
+        cnt = 1;
+        l = r = nullptr;
+    }
+};
+
+int cnt (pitem it) {
+    return it ? it->cnt : 0;
+}
+
+void upd_cnt (pitem it) {
+    if (it)
+        it->cnt = cnt(it->l) + cnt(it->r) + 1;
+}
+
+void merge (pitem & t, pitem l, pitem r) {
+    if (!l || !r)
+        t = l ? l : r;
+    else if (l->prior > r->prior)
+        merge (l->r, l->r, r),  t = l;
+    else
+        merge (r->l, l, r->l),  t = r;
+    upd_cnt (t);
+}
+
+void split (pitem t, pitem & l, pitem & r, int key, int add = 0) {
+    if (!t)
+        return void( l = r = 0 );
+    int cur_key = add + cnt(t->l);
+    if (key <= cur_key)
+        split (t->l, l, t->l, key, add),  r = t;
+    else
+        split (t->r, t->r, r, key, add + 1 + cnt(t->l)),  l = t;
+    upd_cnt (t);
+}
+
+void output (pitem t) {
+    if (!t)  return;
+    output (t->l);
+    printf("%d %d\n", t->value.first, t->value.second);
+    output (t->r);
+    delete t;
+}
+
 bool Prime(int x)
 {
     if (x <= 1) return false;
@@ -42,6 +94,14 @@ ii getHash(ii H[], int l, int r)
         res.second = (ll(res.second) - ll(pw2[r - l]) * H[l].second % mod2 + mod2) % mod2;
     }
     return res;
+}
+
+void Progress(int &row, int &col, int hm = 1) {
+    while (hm--)
+        if (col == 0) {
+            row++;
+            col = m - 1;
+        } else col--;
 }
 
 int main()
@@ -70,8 +130,9 @@ int main()
             HA[i] = h;
         }
         int res = 0;
-        int pnt = 0;
         deque <int> D;
+        pitem treap = nullptr;
+        int row = 1, col = 0;
         for (int i = 0; i < n; i++) {
             h = {0, 0};
             for (int j = 0; j < m; j++) {
@@ -85,15 +146,28 @@ int main()
                     if (D.front() == B[j]) {
                         add++;
                         D.pop_front();
+                        Progress(row, col);
                     } else {
+                        pitem lef, rig;
+                        split(treap, lef, rig, col);
+                        auto me = new item({row, B[j]});
+                        merge(treap, lef, me);
+                        merge(treap, treap, rig);
                         add++;
                         res++;
                     }
                 else {
                     int cand = m - j;
                     if (getHash(HA, i * m, i * m + cand - 1) ==
-                        getHash(HB, m - cand, m - 1))
+                        getHash(HB, m - cand, m - 1)) {
+                        Progress(row, col, cand);
                         break;
+                    }
+                    pitem lef, rig;
+                    split(treap, lef, rig, col);
+                    auto me = new item({row, B[j]});
+                    merge(treap, lef, me);
+                    merge(treap, treap, rig);
                     add++;
                     res++;
                 }
@@ -101,6 +175,7 @@ int main()
                 D.push_back(A[j]);
         }
         printf("%d\n", res);
+        output(treap);
     }
     return 0;
 }
