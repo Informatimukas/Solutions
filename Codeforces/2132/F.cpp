@@ -15,16 +15,12 @@ struct node {
     vector<ii> neigh;
     int low, tim;
     ii dist;
-    bool fir, lst;
-    node(): low{0}, tim{0}, dist{Inf, -2}, fir{false}, lst{false} {}
+    node(): low{0}, tim{0}, dist{Inf, -2} {}
 };
 
 void Traverse(int v, int p, vector<node>& nodes, vector<edge>& edges) {
     static int tim = 0;
     nodes[v].tim = nodes[v].low = ++tim;
-    if (v == 1) nodes[v].fir = true;
-    if (v + 1 == nodes.size())
-        nodes[v].lst = true;
     for (auto& [u, ind]: nodes[v].neigh) {
         if (u == p) continue;
         if (nodes[u].tim)
@@ -36,6 +32,24 @@ void Traverse(int v, int p, vector<node>& nodes, vector<edge>& edges) {
                 edges[ind].bridge = true;
         }
     }
+}
+
+vector<int> BFS(int v, const vector<node>& nodes) {
+    vector dist(nodes.size(), numeric_limits<int>::max());
+    dist[v] = 0;
+    queue<int> Q;
+    Q.push(v);
+    while (!Q.empty()) {
+        v = Q.front();
+        Q.pop();
+        for (auto& u : nodes[v].neigh | views::keys) {
+            if (dist[v] + 1 < dist[u]) {
+                dist[u] = dist[v] + 1;
+                Q.push(u);
+            }
+        }
+    }
+    return dist;
 }
 
 int main() {
@@ -55,9 +69,14 @@ int main() {
             edges[i].bridge = false;
         }
         Traverse(1, 0, nodes, edges);
+        auto dist1 = BFS(1, nodes);
+        auto distn = BFS(n, nodes);
         bool wasBridge = false;
         priority_queue<iii, vector<iii>, greater<>> Q;
-        for (int i = 0; i < m; i++)
+        for (int i = 0; i < m; i++) {
+            if (edges[i].bridge && dist1[n] != dist1[edges[i].a] + distn[edges[i].b] + 1 &&
+                dist1[n] != dist1[edges[i].b] + distn[edges[i].a] + 1)
+                edges[i].bridge = false;
             if (edges[i].bridge) {
                 wasBridge = true;
                 if (ii{0, i} < nodes[edges[i].a].dist) {
@@ -69,6 +88,7 @@ int main() {
                     Q.emplace(nodes[edges[i].b].dist, edges[i].b);
                 }
             }
+        }
         int q;
         cin >> q;
         vector<int> queries(q);
@@ -83,7 +103,6 @@ int main() {
             int v = Q.top().second;
             Q.pop();
             if (nodes[v].dist != d) continue;
-            cout << "v = " << v << ", dist = " << nodes[v].dist.first << ", " << nodes[v].dist.second+1 << endl;
             ii cand = {d.first + 1, d.second};
             for (auto& u : nodes[v].neigh | views::keys)
                 if (cand < nodes[u].dist) {
