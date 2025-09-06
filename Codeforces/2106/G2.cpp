@@ -1,60 +1,112 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int Maxn = 1005;
-
-int T;
-int n;
-int res[Maxn];
-
-int Ask(int v)
-{
-    printf("? 1 1 %d\n", v);
-    fflush(stdout);
-    int res; scanf("%d", &res);
+int Ask(const vector<int>& seq) {
+    cout << "? 1 " << seq.size();
+    for (auto& x : seq)
+        cout << " " << x;
+    cout << endl;
+    int res;
+    cin >> res;
     return res;
 }
 
 void Toggle(int v)
 {
-    printf("? 2 %d\n", v);
-    fflush(stdout);
+    cout << "? 2 " << v << endl;
 }
 
-void Print()
+void Print(const vector<int>& res)
 {
-    printf("!");
-    for (int i = 1; i <= n; i++)
-        printf(" %d", res[i]);
-    printf("\n");
-    fflush(stdout);
+    cout << "!";
+    for (int i = 1; i <= res.size(); i++)
+        cout << " " << res[i];
+    cout << endl;
+}
+
+void simpleSolve(int v, int fp, vector<vector<int>>& neigh, vector<int>& res) {
+    int fv = Ask({v});
+    res[v] = fv - fp;
+    for (auto& u : neigh[v]) {
+        neigh[u].erase(ranges::find(neigh[u], v));
+        simpleSolve(u, fv, neigh, res);
+    }
+}
+
+void Count(int v, int p, const vector<vector<int>>& neigh, vector<int>& cnt) {
+    cnt[v] = 1;
+    for (auto& u : neigh[v]) {
+        if (u == p) continue;
+        Count(u, v, neigh, cnt);
+        cnt[v] += cnt[u];
+    }
+}
+
+int getCentroid(int v, int p, const vector<vector<int>>& neigh, vector<int>& cnt, int lim) {
+    for (auto& u : neigh[v]) {
+        if (u == p) continue;
+        if (cnt[u] > lim)
+            return getCentroid(u, v, neigh, cnt, lim);
+    }
+    return v;
+}
+
+void Solve(int v, vector<vector<int>>& neigh, vector<int>& res) {
+    static vector<int> cnt(neigh.size());
+    Count(v, 0, neigh, cnt);
+    v = getCentroid(v, 0, neigh, cnt, cnt[v] / 2);
+    if (neigh[v].empty()) {
+        res[v] = Ask({v});
+        return;
+    }
+    int lef = 0, rig = neigh[v].size() - 1;
+    while (lef <= rig) {
+        int mid = lef + rig >> 1;
+        vector<int> tk;
+        copy(neigh[v].begin(), neigh[v].begin() + mid + 1, back_inserter(tk));
+        int old = Ask(tk);
+        Toggle(v);
+        int nw = Ask(tk);
+        if (abs(old - nw) == mid + 1)
+            lef = mid + 1;
+        else rig = mid - 1;
+    }
+    if (lef >= neigh[v].size()) {
+        int old = Ask({v});
+        Toggle(v);
+        int nw = Ask({v});
+        res[v] = old < nw ? 1 : -1;
+        for (auto& u : neigh[v]) {
+            neigh[u].erase(ranges::find(neigh[u], v));
+            simpleSolve(u, nw, neigh, res);
+        }
+        return;
+    }
+    int u = neigh[v][lef];
+    int fu = Ask({u});
+    neigh[v].erase(neigh[v].begin() + lef);
+    simpleSolve(v, fu, neigh, res);
+    neigh[u].erase(ranges::find(neigh[u], v));
+    Solve(u, neigh, res);
 }
 
 int main()
 {
-    scanf("%d", &T);
+    int T;
+    cin >> T;
     while (T--) {
-        scanf("%d", &n);
+        int n;
+        cin >> n;
+        vector neigh(n + 1, vector<int>());
+        vector<int> res(n + 1);
         for (int i = 0; i < n - 1; i++) {
             int a, b;
-            scanf("%d %d", &a, &b);
+            cin >> a >> b;
+            neigh[a].push_back(b);
+            neigh[b].push_back(a);
         }
-        int g1 = Ask(1);
-        Toggle(1);
-        int g2 = Ask(1);
-        res[1] = g2 > g1? 1: -1;
-        if (g2 % 2)
-            for (int i = 2; i <= n; i++)
-                res[i] = Ask(i) - res[1];
-        else {
-            if (g2 != 0) {
-                Toggle(1);
-                res[1] = -res[1];
-            }
-            for (int i = 2; i <= n; i++)
-                res[i] = Ask(i);
-        }
-        Print();
+        Solve(1, neigh, res);
+        Print(res);
     }
     return 0;
 }
