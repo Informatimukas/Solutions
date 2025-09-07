@@ -8,7 +8,7 @@ constexpr int Inf = 1000000000;
 
 struct edge {
     int a, b;
-    bool bridge;
+    bool bridge, onPath;
 };
 
 struct node {
@@ -34,22 +34,29 @@ void Traverse(int v, int p, vector<node>& nodes, vector<edge>& edges) {
     }
 }
 
-vector<int> BFS(int v, const vector<node>& nodes) {
+void BFS(int v, const vector<node>& nodes, vector<edge>& edges) {
     vector dist(nodes.size(), numeric_limits<int>::max());
+    vector<ii> par(nodes.size());
     dist[v] = 0;
     queue<int> Q;
     Q.push(v);
     while (!Q.empty()) {
         v = Q.front();
         Q.pop();
-        for (auto& u : nodes[v].neigh | views::keys) {
+        for (auto& [u, ind] : nodes[v].neigh) {
             if (dist[v] + 1 < dist[u]) {
                 dist[u] = dist[v] + 1;
+                par[u] = {v, ind};
                 Q.push(u);
             }
         }
     }
-    return dist;
+    v = nodes.size() - 1;
+    assert(dist[v] < numeric_limits<int>::max());
+    while (v != 1) {
+        edges[par[v].second].onPath = true;
+        v = par[v].first;
+    }
 }
 
 int main() {
@@ -66,18 +73,14 @@ int main() {
             cin >> edges[i].a >> edges[i].b;
             nodes[edges[i].a].neigh.emplace_back(edges[i].b, i);
             nodes[edges[i].b].neigh.emplace_back(edges[i].a, i);
-            edges[i].bridge = false;
+            edges[i].bridge = edges[i].onPath = false;
         }
         Traverse(1, 0, nodes, edges);
-        auto dist1 = BFS(1, nodes);
-        auto distn = BFS(n, nodes);
+        BFS(1, nodes, edges);
         bool wasBridge = false;
         priority_queue<iii, vector<iii>, greater<>> Q;
         for (int i = 0; i < m; i++) {
-            if (edges[i].bridge && dist1[n] != dist1[edges[i].a] + distn[edges[i].b] + 1 &&
-                dist1[n] != dist1[edges[i].b] + distn[edges[i].a] + 1)
-                edges[i].bridge = false;
-            if (edges[i].bridge) {
+            if (edges[i].bridge && edges[i].onPath) {
                 wasBridge = true;
                 if (ii{0, i} < nodes[edges[i].a].dist) {
                     nodes[edges[i].a].dist = {0, i};
@@ -94,10 +97,6 @@ int main() {
         vector<int> queries(q);
         for (auto& x : queries)
             cin >> x;
-        if (!wasBridge) {
-            cout << "-1\n";
-            continue;
-        }
         while (!Q.empty()) {
             auto d = Q.top().first;
             int v = Q.top().second;
@@ -111,7 +110,8 @@ int main() {
                 }
         }
         for (int i = 0; i < queries.size(); i++) {
-            cout << nodes[queries[i]].dist.second + 1 << (i + 1 < queries.size()? ' ': '\n');
+            int res = wasBridge ? nodes[queries[i]].dist.second + 1 : -1;
+            cout << res << (i + 1 < queries.size()? ' ': '\n');
         }
     }
     return 0;
