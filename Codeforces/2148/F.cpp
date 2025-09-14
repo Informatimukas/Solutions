@@ -34,18 +34,20 @@ int main() {
             }
             int val = numeric_limits<int>::max();
             set<int> best;
-            for (auto it = imp.begin(); it != imp.end(); )
-                if (B[*it].size() <= i)
-                    imp.erase(it++);
-                else {
-                    if (B[*it][i] < val) {
-                        val = B[*it][i];
-                        best.clear();
-                    }
-                    if (B[*it][i] == val)
-                        best.insert(*it);
-                    ++it;
+            for (auto it = imp.begin(); it != imp.end(); ) {
+                if (B[*it].size() <= i) {
+                    imp.clear();
+                    best.clear();
+                    break;
                 }
+                if (B[*it][i] < val) {
+                    val = B[*it][i];
+                    best.clear();
+                }
+                if (B[*it][i] == val)
+                    best.insert(*it);
+                ++it;
+            }
             if (best.empty()) {
                 i--;
                 continue;
