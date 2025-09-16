@@ -27,7 +27,7 @@ ll Solve(ll x, ll y, ll vx, ll vy, ll n) {
     a = val % md * a % md;
     if (a <= 0) a += md;
     b = (a * vy - val * g) / vx;
-    return a + b - 2 + (a + b - 1) / 2 + abs(a - b) / 2;
+    return a + b - 2 + (a + b) / 2 + abs(a - b) / 2;
 }
 
 int main()
