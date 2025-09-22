@@ -29,30 +29,26 @@ int main()
         vector<int> A(n);
         int sum = 0;
         for (auto& el : A) {
-            cin >> el;
-            sum += el;
+            el = -1;//cin >> el;
+            sum += max(0, el);
         }
         if (sum > n - 1) {
             cout << "0\n";
             continue;
         }
         vector dp(n + 1, vector(n + 1, vector(n + 1, vector(n + 1, 0))));
-        vector lef(n + 1, vector(n + 1, vector(n + 1, 0)));
-        vector rig(n + 1, vector(n + 1, vector(n + 1, 0)));
-        vector all(n + 1, vector(n + 1, 0));
+        for (int i = 0; i <= n; i++)
+            dp[i][i][0][0] = 1;
         for (int s = 1; s <= n; s++)
-            for (int i = 0, j = i + s - 1; j < n; i++, j++) {
-                int lim = s - accumulate(A.begin() + i, A.begin() + j + 1, 0, [](int u, int v) {
-                    return u + max(0, v);
-                });
-                for (int a = 0; a <= lim; a++)
-                    for (int b = 0; a + b <= lim; b++)
-                        for (int k = i; k <= j; k++) {
+            for (int i = 0, j = i + s; j <= n; i++, j++) {
+                for (int a = 0; a <= s; a++)
+                    for (int b = 0; a + b <= s; b++)
+                        for (int k = i; k < j; k++) {
                             int s1 = k - i;
-                            int s2 = j - k;
+                            int s2 = j - 1 - k;
                             int na = a;
                             int nb = b;
-                            if (i != 0 && (s1 <= s2 || j == n - 1)) {
+                            if (i != 0 && (s1 <= s2 || j == n)) {
                                 if (na == 0) break;
                                 na--;
                             } else {
