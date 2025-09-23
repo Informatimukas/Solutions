@@ -6,9 +6,43 @@ using ll = long long;
 constexpr int Maxn = 205;
 constexpr int mod = 998244353;
 
-void quickAdd(int &a, int b) {
-    a += b;
-    if (a >= mod) a -= mod;
+int Solve(int i, int j, int a, int b, const vector<int>& A,
+    vector<vector<vector<vector<int>>>>& dp, const vector<vector<int>>& C) {
+    if (i > j)
+        return (a == 0 || a == A.size()) && (b == 0 || b == A.size());
+    int& res = dp[i][j][a][b];
+    if (res != -1)
+        return res;
+    res = 0;
+    for (int k = i; k <= j; k++) {
+        int s1 = k - i;
+        int s2 = j - k;
+        int na = a;
+        int nb = b;
+        if (i != 0 && (s1 <= s2 || j == A.size() - 1)) {
+            if (na == 0)
+                continue;
+            if (na != A.size())
+                na--;
+        } else {
+            if (nb == 0)
+                continue;
+            if (nb != A.size())
+                nb--;
+        }
+        int ways = 0;
+        if (A[k] == -1)
+            ways = (ways + static_cast<ll>(Solve(i, k - 1, na, A.size(), A, dp, C)) *
+                Solve(k + 1, j, A.size(), nb, A, dp, C)) % mod;
+        else {
+            for (int l = 0, r = A[k]; l <= A[k]; l++, r--)
+                if (l <= s1 && r <= s2)
+                    ways = (ways + static_cast<ll>(Solve(i, k - 1, na, l, A, dp, C)) *
+                        Solve(k + 1, j, r, nb, A, dp, C)) % mod;
+        }
+        res = (res + static_cast<ll>(ways) * C[s1 + s2][s1]) % mod;
+    }
+    return res;
 }
 
 int main()
@@ -29,53 +63,15 @@ int main()
         vector<int> A(n);
         int sum = 0;
         for (auto& el : A) {
-            el = -1;//cin >> el;
+            cin >> el;
             sum += max(0, el);
         }
         if (sum > n - 1) {
             cout << "0\n";
             continue;
         }
-        vector dp(n + 1, vector(n + 1, vector(n + 1, vector(n + 1, 0))));
-        for (int i = 0; i <= n; i++)
-            dp[i][i][0][0] = 1;
-        for (int s = 1; s <= n; s++)
-            for (int i = 0, j = i + s; j <= n; i++, j++) {
-                for (int a = 0; a <= s; a++)
-                    for (int b = 0; a + b <= s; b++)
-                        for (int k = i; k < j; k++) {
-                            int s1 = k - i;
-                            int s2 = j - 1 - k;
-                            int na = a;
-                            int nb = b;
-                            if (i != 0 && (s1 <= s2 || j == n)) {
-                                if (na == 0) break;
-                                na--;
-                            } else {
-                                if (nb == 0) break;
-                                nb--;
-                            }
-                            int ways = 0;
-                            if (A[k] == -1) {
-                                int ways1 = s1? lef[i][k - 1][na]: static_cast<int>(na == 0);
-                                int ways2 = s2? rig[k + 1][j][nb]: static_cast<int>(nb == 0);
-                                ways = (ways + static_cast<ll>(ways1) * ways2) % mod;
-                            } else {
-                                for (int l = 0, r = A[k]; l <= A[k]; l++, r--)
-                                    if (l <= s1 && r <= s2) {
-                                        int ways1 = s1? dp[i][k - 1][na][l]: static_cast<int>(na == 0);
-                                        int ways2 = s2? dp[k + 1][j][r][nb]: static_cast<int>(nb == 0);
-                                        ways = (ways + static_cast<ll>(ways1) * ways2) % mod;
-                                    }
-                            }
-                            ways = static_cast<ll>(ways) * C[s1 + s2][s1] % mod;
-                            quickAdd(dp[i][j][a][b], ways);
-                            quickAdd(lef[i][j][a], ways);
-                            quickAdd(rig[i][j][b], ways);
-                            quickAdd(all[i][j], ways);
-                        }
-            }
-        cout << all[0][n - 1] << "\n";
+        vector dp(n + 1, vector(n + 1, vector(n + 1, vector(n + 1, -1))));
+        cout << Solve(0, n - 1, n, n, A, dp, C) << "\n";
     }
     return 0;
 }
