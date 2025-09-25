@@ -47,7 +47,7 @@ int main() {
         }
         int cnt = 0;
         for (auto& [key, val] : M)
-            if (key > need)
+            if (key >= need)
                 cnt += val;
         int toVal = k % 2 && cnt > 1 ? need + 1 : need;
         for (auto& [key, val] : M)
