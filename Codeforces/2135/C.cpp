@@ -40,7 +40,7 @@ void Traverse(int v, Tree& tree) {
             continue;
         tree.P[u][0] = v;
         tree.L[u] = tree.L[v] + 1;
-        Traverse(v, tree);
+        Traverse(u, tree);
     }
 }
 
@@ -119,9 +119,9 @@ int main()
     while (T--) {
         int n, m, V;
         cin >> n >> m >> V;
-        vector<int> a(n);
-        for (auto& x : a)
-            cin >> x;
+        vector<int> a(n + 1);
+        for (int i = 1; i <= n; i++)
+            cin >> a[i];
         vector<ii> queries;
         UnionSet us(n);
         Tree t(n);
