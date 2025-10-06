@@ -4,10 +4,8 @@ using namespace std;
 using ll = long long;
 
 struct pos {
-    int row;
-    int cnt;
-    vector<int> my;
-    pos(int row, deque<int>& D): row(row), cnt(1), my(D.begin(), D.end()) {}
+    int val;
+    int left, right;
 };
 
 ll Solve(const vector<string>& B, int k) {
@@ -25,25 +23,29 @@ ll Solve(const vector<string>& B, int k) {
                 my[i].pop_back();
                 my[i].push_front(j);
             }
-            L.push_front(pos(i, my[i]));
-            cur += L.front().my.back();
-            for (auto& el : L.front().my) {
-                auto itp = L.begin();
-                auto it = next(L.begin());
-                while (it != L.end() && el < it->my.back()) {
-                    cur -= static_cast<ll>(it->my.back()) * it->cnt;
-                    it->my.pop_back();
-                    if (it->my.empty()) {
-                        itp->cnt += it->cnt;
-                        cur += static_cast<ll>(itp->my.back()) * it->cnt;
-                        L.erase(it++);
-                    } else {
-                        cur += static_cast<ll>(it->my.back()) * it->cnt;
-                        itp = it++;
+            cur += my[i].back();
+            for (auto& val : my[i]) {
+                int lef = i + 1, rig = i;
+                auto it = L.begin();
+                while (it != L.end() && it->val >= val) {
+                    if (it->right > rig) {
+                        cur -= it->val * (it->right - rig);
+                        swap(it->right, rig);
                     }
+                    if (it->left > it->right) {
+                        L.erase(it++);
+                        continue;
+                    }
+                    if (lef <= it->right) {
+                        cur += it->val * (it->right - lef + 1);
+                        lef = it->right + 1;
+                    }
+                    ++it;
                 }
+                cur += val * (rig - lef + 1);
+                L.insert(it, {val, i, rig});
             }
-            res += cur - static_cast<ll>(n - i) * i;
+            res += cur - static_cast<ll>(n - i) * j;
         }
     }
     return res;
