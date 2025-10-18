@@ -45,20 +45,19 @@ int main() {
             while (true) {
                 int i = a / p;
                 int pref = i * p;
-                int j = a % p;
-                int k = b % p;
-                if (i == b / p && mem[i][j][k][2] > 0 && pref + mem[i][j][k][1] <= r) {
+                int j = a - pref;
+                int k = b - pref;
+                if (k < p && mem[i][j][k][2] > 0 && pref + mem[i][j][k][1] <= r) {
                     res += mem[i][j][k][2];
                     a = pref + mem[i][j][k][0];
                     b = pref + mem[i][j][k][1];
-                } else {
-                    int oth = max(b + 1, nxt[a]);
-                    if (oth <= r) {
-                        res++;
-                        a = b;
-                        b = oth;
-                    } else break;
                 }
+                int oth = max(b + 1, nxt[a]);
+                if (oth <= r) {
+                    res++;
+                    a = b;
+                    b = oth;
+                } else break;
             }
             cout << res << "\n";
         }
