@@ -25,7 +25,7 @@ int main() {
             S.insert(h);
         }
         vector<int> mn(sum + 1);
-        vector<bool> good(sum);
+        vector<bool> good(sum + 1);
         for (int i = 0; i <= sum; i++) {
             mn[i] = *S.begin();
             good[i] = *S.begin() + 1 >= *S.rbegin();
@@ -61,7 +61,9 @@ int main() {
         vector dp(m + 1, vector(mnmob + 1, static_cast<ld>(0)));
         for (int i = m; i >= 0; i--)
             for (int j = 0; j <= i && j < dp[i].size(); j++) {
-                int tk = min(i - j, sum);
+                int tk = i - j;
+                if (j * n + tk > sum)
+                    continue;
                 int cur = mn[tk] - j;
                 if (cur < 0)
                     continue;
@@ -70,8 +72,8 @@ int main() {
                     continue;
                 }
                 if (cur == 0) {
-                    int needFinish = min(allowed, max(0, sum - j * n - tk));
-                    dp[i][j] = probFinish[m - i][needFinish];
+                    int needFinish = sum - j * n - tk;
+                    dp[i][j] = needFinish <= allowed ? probFinish[m - i][needFinish] : 0;
                     continue;
                 }
                 if (i == m)
