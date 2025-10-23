@@ -7,7 +7,7 @@ constexpr int Maxk = 20;
 
 int goodSteps(int a, int b, const vector<array<int, Maxk>>& nxt) {
     if (a >= b)
-        return -1;
+        return 0;
     int res = 0;
     for (int i = Maxk - 1; i >= 0; i--)
         if (nxt[a][i] < nxt[b][i]) {
@@ -57,10 +57,9 @@ int main() {
         for (int j = 0; j < Maxk; j++)
             dp[n][j] = {0, n};
         for (int i = n - 1; i >= 0; i--) {
-            int mn = min(2 * goodSteps(i, i + 1, nxt),
+            int mn = min(2 * goodSteps(i, i + 1, nxt) + 1,
                 2 * goodSteps(i + 1, nxt[i][0], nxt) + 1);
             dp[i][0] = {mn + 1, Move(i, i + 1, mn, nxt).second};
-            cout << "dp[" << i << "][0] = " << dp[i][0].first << ", " << dp[i][0].second << endl;
             for (int j = 1; j < Maxk; j++) {
                 auto& [steps, ni] = dp[i][j - 1];
                 dp[i][j] = {steps + dp[ni][j - 1].first, dp[ni][j - 1].second};
@@ -84,7 +83,7 @@ int main() {
                     res += dp[cur][i].first;
                     cur = dp[cur][i].second;
                 }
-            int lef = 1, rig = dp[cur][0].first;
+            int lef = 1, rig = dp[cur][0].first - 1;
             while (lef <= rig) {
                 int mid = (lef + rig) / 2;
                 if (Move(cur, cur + 1, mid, nxt).second <= r)

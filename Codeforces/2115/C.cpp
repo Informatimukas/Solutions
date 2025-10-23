@@ -32,7 +32,7 @@ int main() {
             S.insert(*S.rbegin() - 1);
             S.erase(prev(S.end()));
         }
-        int allowed = min(m, sum);
+        int allowed = min(m, sum - n * mnmob);
         vector probFinish(m + 1, vector(allowed + 1, static_cast<ld>(0)));
         probFinish[0][0] = 1;
         for (int i = 1; i <= m; i++) {
@@ -41,23 +41,22 @@ int main() {
                 probFinish[i][j] = probAll * probFinish[i - 1][j] +
                     probOne * probFinish[i - 1][j - 1];
         }
-        vector probNuke(m + 1, vector(mnmob + 1, vector(n, static_cast<ld>(0))));
-        probNuke[0][0][0] = 1;
-        for (int i = 1; i <= m; i++)
-            for (int j = 0; j <= i && j < probNuke[i].size(); j++)
-                for (int k = 0; k < n; k++) {
-                    ld bestAll = probNuke[i - 1][j][k];
-                    if (j > 0)
-                        bestAll = max(bestAll, probNuke[i - 1][j - 1][k]);
-                    probNuke[i][j][k] += probAll * bestAll;
-                    ld bestOne = probNuke[i - 1][j][k];
-                    if (k > 0 || j > 0) {
-                        int nj = j - (k == 0);
-                        int nk = (k + n - 1) % n;
-                        bestOne = max(bestOne, probNuke[i - 1][nj][nk]);
-                    }
-                    probNuke[i][j][k] += probOne * bestOne;
-                }
+        int allowedNuke = min(sum, (mnmob + 1) * n);
+        vector probNuke(m + 1, vector(allowedNuke + 1, static_cast<ld>(0)));
+        probNuke[0][0] = 1;
+        for (int i = 1; i <= m; i++) {
+            int to = min(static_cast<int>(probNuke[i].size()) - 1, i * n);
+            for (int j = 0; j <= to; j++) {
+                ld bestAll = probNuke[i - 1][j];
+                if (j >= n)
+                    bestAll = max(bestAll, probNuke[i - 1][j - n]);
+                probNuke[i][j] += probAll * bestAll;
+                ld bestOne = probNuke[i - 1][j];
+                if (j > 0)
+                    bestOne = max(bestOne, probNuke[i - 1][j - 1]);
+                probNuke[i][j] += probOne * bestOne;
+            }
+        }
         vector dp(m + 1, vector(mnmob + 1, static_cast<ld>(0)));
         for (int i = m; i >= 0; i--)
             for (int j = 0; j <= i && j < dp[i].size(); j++) {
@@ -68,7 +67,7 @@ int main() {
                 if (cur < 0)
                     continue;
                 if (good[tk]) {
-                    dp[i][j] = probNuke[m - i][cur][(sum - tk) % n];
+                    dp[i][j] = probNuke[m - i][sum - j * n - tk];
                     continue;
                 }
                 if (cur == 0) {
