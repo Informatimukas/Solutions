@@ -57,8 +57,11 @@ int main() {
         for (int j = 0; j < Maxk; j++)
             dp[n][j] = {0, n};
         for (int i = n - 1; i >= 0; i--) {
-            int mn = min(2 * goodSteps(i, i + 1, nxt) + 1,
-                2 * goodSteps(i + 1, nxt[i][0], nxt) + 1);
+            int mn;
+            if (nxt[i][0] <= i + 1)
+                mn = 0;
+            else mn = min(2 * goodSteps(i, i + 1, nxt) + 1,
+                2 * goodSteps(i + 1, nxt[i][0], nxt) + 2);
             dp[i][0] = {mn + 1, Move(i, i + 1, mn, nxt).second};
             for (int j = 1; j < Maxk; j++) {
                 auto& [steps, ni] = dp[i][j - 1];
