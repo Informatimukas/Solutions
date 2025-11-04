@@ -25,14 +25,9 @@ int main()
         vector<ll> dp(seq.size() + 1, Inf);
         dp[0] = 0;
         for (int i = 0; i < seq.size(); i++) {
-            ll cur = 0;
-            ll pnt = i;
-            while (pnt < seq.size()) {
-                cur = max(cur + 1, (seq[pnt] + seq[i] - 1) / seq[i]);
-                pnt = distance(seq.begin(), ranges::upper_bound(seq, cur * seq[i]));
-                if (cur > pnt - i)
-                    pnt = i + cur;
-                else dp[pnt] = min(dp[pnt], dp[i] + cur);
+            for (int j = 1; j <= 3; j++) {
+                int pnt = distance(seq.begin(), ranges::upper_bound(seq, j * seq[i]));
+                dp[pnt] = min(dp[pnt], dp[i] + j);
             }
         }
         cout << dp[seq.size()] << "\n";
