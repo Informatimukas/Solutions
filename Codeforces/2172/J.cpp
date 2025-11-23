@@ -14,11 +14,9 @@ int getPar(vector<node>& nodes, int v) {
 
 void Progress(node& v, int to, vector<int>& res) {
     int add = to - v.low;
-    cout << "move from " << v.low << " to " << to << endl;
     v.low = to;
     if (v.cur == 0)
         return;
-    cout << "interval " << v.rig + 1 - v.cur << " " << v.rig << endl;
     res[v.rig + 1 - v.cur] += add;
     if (v.rig + 1 < res.size())
         res[v.rig + 1] -= add;
@@ -65,6 +63,7 @@ int main()
     for (int i = 0; i < n; i++) {
         for (auto& ind : A[i]) {
             int p = getPar(nodes, ind);
+            Progress(nodes[p], i, res);
             nodes[p].cur--;
         }
         for (auto& ind : B[i])
