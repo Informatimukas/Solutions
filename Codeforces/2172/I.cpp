@@ -22,12 +22,17 @@ struct vec {
 ld Area(ld h, ld r) {
     cout << h << " " << r << endl;
     ld alpha = acos(h / r);
+    cout << "alpha = " << alpha << ", res = " << r * r * alpha - h * r * sin(alpha) << endl;
     return r * r * alpha - h * r * sin(alpha);
 }
 
-ld getH(const vec& a, const vec& b, ld r) {
+ld getH(const vec& a, const vec& b) {
     ld d = (a - b).Distance();
-    return sqrt(d * d / 4 - r * r);
+    ld r = a.Distance();
+    cout << "r = " << r << endl;
+    cout << "d = " << d << endl;
+    cout << "h = " << sqrt(r * r - d * d / 4) << endl;
+    return sqrt(r * r - d * d / 4);
 }
 
 ld Solve(const vector<vec>& hull, ld r) {
@@ -40,9 +45,9 @@ ld Solve(const vector<vec>& hull, ld r) {
     ld res = 0;
     for (int i = 0; i < hull.size(); i++) {
         int ni = (i + 1) % hull.size();
-        if (((origin - hull[i]) ^ (origin - hull[ni])) >= 0)
+        if (((origin - hull[i]) ^ (hull[ni] - hull[i])) >= 0)
             return Area(0, r);
-        res = max(res, Area(getH(hull[i], hull[i + 1], r), r));
+        res = max(res, Area(getH(hull[i], hull[ni]), r));
     }
     return res;
 }
@@ -70,11 +75,16 @@ int main() {
     cout << "end\n";
     vector hull = {seq[0]};
     for (int i = 1; i < seq.size(); i++) {
-        while (hull.size() >= 2 && ((seq[i] - hull[hull.size() - 2]) ^ (seq[i] - hull.back())) >= 0)
+        while (hull.size() >= 2 && ((seq[i] - hull.back()) ^
+            (hull.back() - hull[hull.size() - 2])) >= 0)
             hull.pop_back();
         hull.push_back(seq[i]);
+        cout << "after " << i << endl;
+        for (auto& [x, y] : hull)
+            cout << " " << x << " " << y << endl;
     }
-    while (hull.size() >= 3 && ((hull[0] - hull[hull.size() - 2]) ^ (hull[0] - hull.back())) >= 0)
+    while (hull.size() >= 3 && ((hull[0] - hull.back()) ^
+        (hull.back() - hull[hull.size() - 2])) >= 0)
         hull.pop_back();
     cout << fixed << setprecision(10) << Solve(hull, r) << "\n";
     return 0;
