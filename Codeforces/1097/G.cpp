@@ -43,7 +43,7 @@ int main()
         dp[rig[i]][1] = (dp[rig[i]][1] - good + mod) % mod;
         dp[i + 1][1] = (dp[i + 1][1] + 2ll * good) % mod;
         // given bad
-        dp[n][1] = (dp[n][1] + 1) % mod;
+        dp[n][1] = (dp[n][1] - pw2[n - rig[i]] + mod) % mod;
         dp[rig[i]][1] = (dp[rig[i]][1] - 1 + mod) % mod;
         dp[i + 1][1] = (dp[i + 1][1] + 2) % mod;
         // from others
