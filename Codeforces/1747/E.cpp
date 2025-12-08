@@ -3,8 +3,12 @@ using namespace std;
 
 // Formula sum(i>=1) : C(n + i - 1, n) * C(m + i - 1, m) / (-1)^i * sum(k >= i): (-1)^k * C(k, i) * (k + 1)
 // Next step: find how to efficiently compute sum(k >= i): (-1)^(k-i) * C(k, i)
+// I transformed sum(k >= i): (-1)^k * C(k, i) * (k + 1) to
+// sum(d in 0..n+m-i): C(d+i+1, d)*(-1)^d ((-1)^i earlier disappears). It should be more
+// manageable. It is related to expansion of (1+x)^(-(i+2)).
 
 using ll = long long;
+using ld = long double;
 
 constexpr int mod = 1000000007;
 
@@ -36,18 +40,26 @@ int main() {
     while (T--) {
         int n, m;
         cin >> n >> m;
+        vector<int> multSum(n + m + 1);
+        multSum[n + m] = 1;
+        for (int i = n + m - 1; i > 0; i--)
+            multSum[i] = (static_cast<ll>(mod - (i + 2)) * multSum[i + 1] + 1) % mod;
+        for (int i = 1; i <= n + m; i++)
+            cout << "multSum[" << i << "] = " << multSum[i] << endl;
         int res = 0;
-        int pw2 = mod - 1;
         for (int i = 1; i <= n + m; i++) {
             int mult = static_cast<ll>(C[n + i - 1][n]) * C[m + i - 1][m] % mod;
-            mult = static_cast<ll>(mult) * toPower(Inv(pw2), i) % mod;
-            int add = 0;
+            cout << "i = " << i << endl;
+            cout << "new = " << static_cast<ll>(i + 1) * multSum[i] % mod << endl;
+            int old = 0;
             for (int k = i; k <= n + m; k++) {
-                int cur = static_cast<ll>(C[k][i]) * toPower(pw2, k) % mod * (k + 1) % mod;
-                add = (add + cur) % mod;
+                int ways = static_cast<ll>(C[k][i]) * (k + 1);
+                if ((k + i) % 2)
+                    ways = (mod - ways) % mod;
+                old = (old + ways) % mod;
             }
-            cout << "add i = " << i << ", add = " << add << endl;
-            res = (res + static_cast<ll>(mult) * add) % mod;
+            cout << "old = " << old << endl;
+            res = (res + mult * static_cast<ll>(i + 1) % mod * multSum[i]) % mod;
         }
         cout << res << "\n";
     }
