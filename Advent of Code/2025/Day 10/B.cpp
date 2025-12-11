@@ -1,42 +1,82 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+using ll = long long;
+
 constexpr int Inf = 1000000000;
 
-int getBest(int lvl, const vector<int>& a, vector<int>& seq) {
-    if (lvl + 1 == a.size()) {
-        int lft = -1;
-        for (int i = 0; i < seq.size(); i++)
-            if (a[lvl] & 1 << i) {
-                if (lft == -1)
-                    lft = seq[i];
-                else if (lft != seq[i])
-                    return Inf;
-            } else if (seq[i] > 0)
-                return Inf;
-        return lft;
+struct matrix {
+    vector<vector<ll>> B;
+    vector<int> my;
+    vector<int> free;
+    vector<ll> vals;
+    matrix() = delete;
+    explicit matrix(vector<vector<ll>> board): B(std::move(board)), vals(B[0].size() - 1) {}
+    void changeSigns(int r) {
+        for (auto& j : B[r])
+            j = -j;
     }
-    int res = Inf;
-    for (int z = 0; ; z++) {
-        bool bad = false;
-        for (int i = 0; i < seq.size(); i++)
-            if (a[lvl] & 1 << i) {
-                if (seq[i] < z) {
-                    bad = true;
-                    break;
-                }
+    void Eliminate(int r1, int r2, int c) {
+        if (B[r2][c] == 0)
+            return;
+        if (B[r2][c] < 0)
+            changeSigns(r2);
+        ll lcm = B[r1][c] / __gcd(B[r1][c], B[r2][c]) * B[r2][c];
+        ll mult1 = lcm / B[r1][c];
+        ll mult2 = lcm / B[r2][c];
+        for (int j = c; j < B[r2].size(); j++)
+            B[r2][j] = B[r2][j] * mult2 - B[r1][j] * mult1;
+    }
+    void Solve() {
+        int j = 0;
+        for (int i = 0; i < B.size(); i++) {
+            while (j + 1 < B[i].size()) {
+                bool has = false;
+                for (int k = i; k < B.size(); k++)
+                    if (B[k][j]) {
+                        has = true;
+                        swap(B[i], B[k]);
+                        break;
+                    }
+                if (!has)
+                    free.push_back(j++);
+                else break;
             }
-        if (bad) break;
-        for (int i = 0; i < seq.size(); i++)
-            if (a[lvl] & 1 << i)
-                seq[i] -= z;
-        res = min(res, getBest(lvl + 1, a, seq) + z);
-        for (int i = 0; i < seq.size(); i++)
-            if (a[lvl] & 1 << i)
-                seq[i] += z;
+            if (j + 1 >= B[i].size())
+                break;
+            if (B[i][j] < 0)
+                changeSigns(i);
+            for (int k = i + 1; k < B.size(); k++)
+                Eliminate(i, k, j);
+            my.push_back(j++);
+        }
+        while (j + 1 < B[0].size())
+            free.push_back(j++);
     }
-    return res;
-}
+    ll backTrack(int lvl, ll cur) {
+        if (lvl >= free.size()) {
+            for (int i = my.size() - 1; i >= 0; i--) {
+                int v = my[i];
+                ll z = B[i].back();
+                for (int j = B[i].size() - 2; j > v; j--)
+                    z -= B[i][j] * vals[j];
+                if (z % B[i][v])
+                    return Inf;
+                vals[v] = z / B[i][v];
+                if (vals[v] < 0)
+                    return Inf;
+                cur += vals[v];
+            }
+            return cur;
+        }
+        ll res = Inf;
+        for (int i = 0; i <= 300; i++) {
+            vals[free[lvl]] = i;
+            res = min(res, backTrack(lvl + 1, cur + i));
+        }
+        return res;
+    }
+};
 
 int main()
 {
@@ -44,7 +84,7 @@ int main()
     cin.tie(nullptr);
     freopen("input.txt", "r", stdin);
     string s;
-    int res = 0;
+    ll res = 0;
     while (getline(cin, s)) {
         cout << "solving " << s << endl;
         stringstream ss(s);
@@ -69,22 +109,30 @@ int main()
                     cur |= 1 << num;
                 a.push_back(cur);
             }
-        ranges::sort(a, [&](int a, int b) {
-            vector<int> seqa, seqb;
-            for (int i = 0; i < seq.size(); i++) {
-                if (a & 1 << i)
-                    seqa.push_back(seq[i]);
-                if (b & 1 << i)
-                    seqb.push_back(seq[i]);
-            }
-            ranges::sort(seqa);
-            ranges::sort(seqb);
-            return seq < seqb;
-        });
-        int got = getBest(0, a, seq);
-        cout << got << endl;
+        vector B(seq.size(), vector<ll>(a.size() + 1));
+        for (int i = 0; i < seq.size(); i++)
+            B[i][a.size()] = seq[i];
+        for (int i = 0; i < seq.size(); i++)
+            for (int j = 0; j < a.size(); j++)
+                B[i][j] = (a[j] & 1 << i) ? 1 : 0;
+        matrix M(B);
+        M.Solve();
+        cout << "final board" << endl;
+        for (int i = 0; i < B.size(); i++)
+            for (int j = 0; j < B[i].size(); j++)
+                cout << M.B[i][j] << (j + 1 < B[i].size() ? ' ' : '\n');
+        cout << "my = " << endl;
+        for (int i = 0; i < M.my.size(); i++)
+            cout << " " << M.my[i];
+        cout << endl;
+        cout << "free = " << endl;
+        for (int i = 0; i < M.free.size(); i++)
+            cout << " " << M.free[i];
+        cout << endl;
+        ll got = M.backTrack(0, 0ll);
+        cout << "got = " << got << endl;
         res += got;
     }
-    cout << res << endl;
+    cout << "tot res = " << res << endl;
     return 0;
 }

@@ -2,76 +2,95 @@
 using namespace std;
 
 using ll = long long;
+using ii = pair<int, int>;
 
 constexpr int lim = 1000000007;
 
 struct node {
     int a{0}, b{0};
-    int mema, memb;
-    vector<int> neigh;
+    int mema{0}, memb{0};
+    bool joined{false};
+    vector<ii> neigh;
 };
 
-bool Traverse(vector<node>& nodes, int v, int p, ll cur, int cnt, vector<int>& tk,
-    vector<int>& par, vector<ll>& best, bool update, ll& resCur, int& resRem) {
-    if (tk[v] == 1) {
-        if (cnt == 0)
-            return false;
-        if (update) {
-            resCur = cur;
-            resRem -= cnt;
-            int u = p;
-            nodes[u].a = nodes[u].b = 0;
-            while (u != v) {
-                u = par[u];
-                nodes[u].a = nodes[u].b = 0;
-            }
+int toUp(vector<node>& nodes, int v, const vector<int>& par, ll& cur) {
+    if (nodes[v].joined)
+        return 0;
+    nodes[v].joined = true;
+    cur += nodes[v].b;
+    return toUp(nodes, par[v], par, cur) + 1;
+}
+
+int Added(vector<node>& nodes, const vector<ii>& edges, ll& cur) {
+    for (int i = 1; i < nodes.size(); i++)
+        nodes[i].neigh.clear();
+    vector<ii> E;
+    for (auto& [a, b] : edges) {
+        int v = nodes[a].joined ? 1 : a;
+        int u = nodes[b].joined ? 1 : b;
+        if (v != u) {
+            nodes[v].neigh.emplace_back(u, E.size());
+            nodes[u].neigh.emplace_back(v, E.size());
+            E.emplace_back(u, v);
         }
-        return true;
     }
-    if (tk[v] == 2 && best[v] >= cur || cur <= nodes[v].a)
-        return false;
-    tk[v] = 1;
-    best[v] = cur;
-    par[v] = p;
-    if (nodes[v].a > 0) {
-        cur += nodes[v].b;
-        cnt++;
-    }
-    for (auto& u : nodes[v].neigh) {
-        if (u == p)
-            continue;
-        if (Traverse(nodes, u, v, cur, cnt, tk, par, best,
-            update, resCur, resRem))
-            return true;
-    }
-    tk[v] = 2;
-    return false;
-}
-
-bool Check(vector<node>& nodes, bool update, ll& cur, int& rem) {
-    vector tk(nodes.size(), 0);
+    vector taken(nodes.size(), false);
+    vector mx(nodes.size(), 0ll);
     vector<int> par(nodes.size());
-    vector<ll> best(nodes.size());
-    return Traverse(nodes, 1, 0, cur, 0, tk, par, best, update, cur, rem);
+    mx[1] = cur;
+    taken[1] = true;
+    queue<ii> Q;
+    Q.emplace(1, -1);
+    int special = -1, wth = -1;
+    while (!Q.empty()) {
+        auto [v, forb] = Q.front();
+        Q.pop();
+        ll my = mx[v] + nodes[v].b;
+        bool stop = false;
+        for (auto& [u, ind] : nodes[v].neigh)
+            if (ind != forb && my > nodes[u].a) {
+                if (taken[u]) {
+                    special = u;
+                    wth = v;
+                    stop = true;
+                    break;
+                }
+                mx[u] = my;
+                taken[u] = true;
+                par[u] = v;
+                Q.emplace(u, ind);
+            }
+        if (stop)
+            break;
+    }
+    if (special == -1)
+        return 0;
+    return toUp(nodes, special, par, cur) + toUp(nodes, wth, par, cur);
 }
 
-bool canSolve(vector<node>& nodes, ll cur) {
-    int rem = nodes.size() - 2;
+bool canSolve(vector<node>& nodes, const vector<ii>& edges, ll cur) {
+    int n = nodes.size() - 1;
     for (int i = 1; i < nodes.size(); i++) {
         nodes[i].a = nodes[i].mema;
         nodes[i].b = nodes[i].memb;
+        nodes[i].joined = false;
     }
-    while (rem > 0)
-        if (!Check(nodes, true, cur, rem))
+    nodes[1].joined = true;
+    int need = n - 1;
+    while (need > 0) {
+        int got = Added(nodes, edges, cur);
+        if (!got)
             return false;
+        need -= got;
+    }
     return true;
 }
 
-ll Solve(vector<node>& nodes) {
+ll Solve(vector<node>& nodes, const vector<ii>& edges) {
     ll lef = 0, rig = lim;
     while (lef <= rig) {
         ll mid = (lef + rig) / 2;
-        if (canSolve(nodes, mid))
+        if (canSolve(nodes, edges, mid))
             rig = mid - 1;
         else lef = mid + 1;
     }
@@ -94,13 +113,10 @@ int main() {
             nodes[i].mema = nodes[i].a;
             nodes[i].memb = nodes[i].b;
         }
-        for (int i = 0; i < m; i++) {
-            int a, b;
+        vector<ii> edges(m);
+        for (auto& [a, b] : edges)
             cin >> a >> b;
-            nodes[a].neigh.push_back(b);
-            nodes[b].neigh.push_back(a);
-        }
-        cout << Solve(nodes) << "\n";
+        cout << Solve(nodes, edges) << "\n";
     }
     return 0;
 }

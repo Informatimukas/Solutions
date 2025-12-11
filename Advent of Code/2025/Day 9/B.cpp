@@ -45,23 +45,28 @@ int main() {
     vector<row> rows(lim);
     for (int i = 0; i < a.size(); i++) {
         int ni = (i + 1) % a.size();
-        if (a[i].second == a[ni].second) {
-            rows[a[i].second].st[max(a[i].first, a[ni].first)]++;
-            rows[a[i].second].st[min(a[i].first, a[ni].first) - 1]--;
-        } else if (a[i].second < a[ni].second)
-            for (int j = a[i].second; j <= a[ni].second; j++)
-                rows[j].st[a[i].first]++;
-        else for (int j = a[i].second; j >= a[ni].second; j--)
-            rows[j].st[a[i].first - 1]--;
+        if (min(a[i].second, a[ni].second) <= 1674 && 1674 <= max(a[i].second, a[ni].second)) {
+            cout << a[i].first << " " << a[i].second << endl;
+            cout << " " << a[ni].first << " " << a[ni].second << endl;
+        }
+        if (a[i].second != a[ni].second) {
+            if (a[i].second < a[ni].second)
+                for (int j = a[i].second + 1; j <= a[ni].second; j++)
+                    rows[j].st[a[i].first]++;
+            else for (int j = a[i].second - 1; j >= a[ni].second; j--)
+                rows[j].st[a[i].first - 1]--;
+        }
     }
-    for (auto& r : rows) {
+    for (int i = 0; i < rows.size(); i++) {
+        auto& r = rows[i];
         int cur = 0, rig = 0;
-        for (auto& [key, val] : r.st | views::reverse) {
+        for (auto &[key, val]: r.st | views::reverse) {
             cur += val;
             if (cur < 0) {
+                cout << "row = " << i << endl;
                 cout << "cur = " << cur << endl;
-                for (auto& [key, val] : r.st)
-                    cout << key << " " << val << endl;
+                for (auto &[key2, val2]: r.st)
+                    cout << key2 << " " << val2 << endl;
                 return 0;
             }
             if (cur != 0) {
@@ -74,12 +79,12 @@ int main() {
             }
         }
         ranges::reverse(r.edges);
-       /* if (!r.edges.empty()) {
-            cout << "newy" << endl;
-            for (auto& e : r.edges)
-                cout << " " << e.first << " " << e.second;
-            cout << endl;
-        }*/
+        /* if (!r.edges.empty()) {
+             cout << "newy" << endl;
+             for (auto& e : r.edges)
+                 cout << " " << e.first << " " << e.second;
+             cout << endl;
+         }*/
     }
     vector<ll3> cands;
     for (int i = 0; i < a.size(); i++)
