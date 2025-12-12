@@ -11,6 +11,10 @@ constexpr int lim = 100000;
 struct row {
     map<int, int> st;
     vector<llll> edges;
+    void Insert(int key) {
+        if (!st.contains(key))
+            st.emplace(key, 1);
+    }
 };
 
 bool Check(const vector<row>& rows, llll a, llll b) {
@@ -49,32 +53,39 @@ int main() {
             cout << a[i].first << " " << a[i].second << endl;
             cout << " " << a[ni].first << " " << a[ni].second << endl;
         }
-        if (a[i].second != a[ni].second) {
-            if (a[i].second < a[ni].second)
-                for (int j = a[i].second + 1; j <= a[ni].second; j++)
-                    rows[j].st[a[i].first]++;
-            else for (int j = a[i].second - 1; j >= a[ni].second; j--)
-                rows[j].st[a[i].first - 1]--;
+        if (a[i].second == a[ni].second) {
+            int mn = min(a[i].first, a[ni].first);
+            int mx = max(a[i].first, a[ni].first);
+            rows[a[i].second].Insert(mn);
+            rows[a[i].second].Insert(mx);
+            rows[a[i].second].st[mn] = 0;
+        } else {
+            int mn = min(a[i].second, a[ni].second);
+            int mx = max(a[i].second, a[ni].second);
+            for (int j = mn; j <= mx; j++)
+                rows[j].Insert(a[i].first);
         }
     }
     for (int i = 0; i < rows.size(); i++) {
         auto& r = rows[i];
+        int got = 0;
+        for (auto& [key, val] : r.st)
+            got += val;
+      /*  if (got % 2) {
+            cout << "row = " << i << endl;
+            for (auto& [key2, val2]: r.st)
+                cout << key2 << " " << val2 << endl;
+            return 0;
+        }*/
         int cur = 0, rig = 0;
-        for (auto &[key, val]: r.st | views::reverse) {
-            cur += val;
-            if (cur < 0) {
-                cout << "row = " << i << endl;
-                cout << "cur = " << cur << endl;
-                for (auto &[key2, val2]: r.st)
-                    cout << key2 << " " << val2 << endl;
-                return 0;
-            }
-            if (cur != 0) {
+        for (auto& [key, val] : r.st | views::reverse) {
+            cur = (cur + val) % 2;
+            if (cur % 2 != 0) {
                 if (!rig)
-                    rig = key;
+                    rig = val;
             } else {
                 if (rig)
-                    r.edges.emplace_back(key + 1, rig);
+                    r.edges.emplace_back(val, rig);
                 rig = 0;
             }
         }

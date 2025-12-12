@@ -3,10 +3,10 @@ using namespace std;
 
 using ii = pair<int, int>;
 
-void Op(vector<int>&a, int ci, int cj, int x, vector<vector<int>>& res) {
-    res.push_back({ci, cj, x});
-    a[ci] -= x;
-    a[cj] += x;
+void Op(vector<int>& a, int ci, int cj, int x, vector<vector<int>>& res) {
+    res.push_back({ci, cj, -x});
+    a[ci] += x;
+    a[cj] -= x;
 }
 
 void Swap(vector<int>& a, int& ci, int cj, int ind, int k, vector<vector<int>>& res) {
@@ -49,8 +49,29 @@ int main() {
         vector<ii> seq;
         for (int i = 1; i < n - 1; i++)
             seq.emplace_back(a[i], i);
-        ranges::sort(seq);
-
+        vector<int> need(n);
+        for (int i = 1; i < n - 1; i++)
+            need[i] = a[i];
+        sort(need.begin() + 1, need.begin() + n - 1);
+        map<int, set<int>> S;
+        for (int i = 1; i < n - 1; i++)
+            if (a[i] != need[i])
+                S[a[i]].insert(i);
+        for (int i = 1; i < n - 1; i++)
+            if (a[i] != need[i]) {
+                S[a[i]].erase(i);
+                S[a[i]].insert(0);
+                Swap(a, ci, cj, i, k, res);
+                while (ci != 0) {
+                    int ind = *S[need[ci]].begin();
+                    S[need[ci]].erase(ind);
+                    Swap(a, ci, cj, ind, k, res);
+                }
+            }
+        Op(a, ci, cj, -a[ci], res);
+        cout << res.size() << "\n";
+        for (auto& V : res)
+            cout << V[0] + 1 << " " << V[1] + 1 << " " << V[2] << "\n";
     }
     return 0;
 }
