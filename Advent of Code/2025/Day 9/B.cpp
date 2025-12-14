@@ -49,54 +49,44 @@ int main() {
     vector<row> rows(lim);
     for (int i = 0; i < a.size(); i++) {
         int ni = (i + 1) % a.size();
-        if (min(a[i].second, a[ni].second) <= 1674 && 1674 <= max(a[i].second, a[ni].second)) {
+        if (min(a[i].second, a[ni].second) <= -1 && -1 <= max(a[i].second, a[ni].second)) {
             cout << a[i].first << " " << a[i].second << endl;
             cout << " " << a[ni].first << " " << a[ni].second << endl;
         }
-        if (a[i].second == a[ni].second) {
-            int mn = min(a[i].first, a[ni].first);
-            int mx = max(a[i].first, a[ni].first);
-            rows[a[i].second].Insert(mn);
-            rows[a[i].second].Insert(mx);
-            rows[a[i].second].st[mn] = 0;
-        } else {
-            int mn = min(a[i].second, a[ni].second);
-            int mx = max(a[i].second, a[ni].second);
-            for (int j = mn; j <= mx; j++)
-                rows[j].Insert(a[i].first);
-        }
+        if (a[i].second != a[ni].second) {
+            if (a[i].second < a[ni].second)
+                for (int j = a[i].second; j <= a[ni].second; j++)
+                    rows[j].st[a[i].first] = 1;
+            else for (int j = a[i].second; j >= a[ni].second; j--)
+                rows[j].st[a[i].first] = -1;
+        } else rows[a[i].second].edges.emplace_back(min(a[i].first, a[ni].first),
+            max(a[i].first, a[ni].first));
     }
     for (int i = 0; i < rows.size(); i++) {
         auto& r = rows[i];
-        int got = 0;
-        for (auto& [key, val] : r.st)
-            got += val;
-      /*  if (got % 2) {
-            cout << "row = " << i << endl;
-            for (auto& [key2, val2]: r.st)
-                cout << key2 << " " << val2 << endl;
+        if (!r.st.empty() && (r.st.begin()->second != -1 ||
+            r.st.rbegin()->second != 1)) {
+            cout << "i = " << i << endl;
+            for (auto& [key, val] : r.st)
+                cout << " key " << key << ", val = " << val << endl;
             return 0;
-        }*/
-        int cur = 0, rig = 0;
-        for (auto& [key, val] : r.st | views::reverse) {
-            cur = (cur + val) % 2;
-            if (cur % 2 != 0) {
-                if (!rig)
-                    rig = val;
-            } else {
-                if (rig)
-                    r.edges.emplace_back(val, rig);
-                rig = 0;
-            }
         }
-        ranges::reverse(r.edges);
-        /* if (!r.edges.empty()) {
-             cout << "newy" << endl;
-             for (auto& e : r.edges)
-                 cout << " " << e.first << " " << e.second;
-             cout << endl;
-         }*/
+        int rig = 0;
+        for (auto& [key, val] : r.st | views::reverse)
+            if (rig && val == -1) {
+                r.edges.emplace_back(key, rig);
+                rig = 0;
+            } else if (!rig && val == 1)
+                rig = key;
+        ranges::sort(r.edges);
+        vector<llll> cur;
+        for (auto& [fir, sec] : r.edges)
+            if (cur.empty() || cur.back().second + 1 < fir)
+                cur.emplace_back(fir, sec);
+            else cur.back().second = max(cur.back().second, sec);
+        r.edges = std::move(cur);
     }
+    cout << "ended" << endl;
     vector<ll3> cands;
     for (int i = 0; i < a.size(); i++)
         for (int j = i + 1; j < a.size(); j++) {
