@@ -12,12 +12,22 @@ void getRanks(const vector<vector<ii>>& vals, vector<int>& rnk) {
             if (cur != lst) {
                 lst = cur;
                 ++col;
-                rnk[el] = col;
             }
+            rnk[el] = col;
         }
-    cout << "new ranks!" << endl;
-    for (int i = 0; i < rnk.size(); i++)
-        cout << "rnk[" << i << "] = " << rnk[i] << endl;
+}
+
+void processDelta(int n, int delt, vector<int>& rnk) {
+    vector<vector<ii>> nxt(n);
+    vector<vector<int>> seq(n);
+    for (int j = 0; j < n; j++)
+        seq[rnk[j]].push_back(j);
+    for (auto& V : seq)
+        for (auto el : V) {
+            int lst = (el - delt + n) % n;
+            nxt[rnk[lst]].emplace_back(lst, rnk[el]);
+        }
+    getRanks(nxt, rnk);
 }
 
 int main()
@@ -36,36 +46,19 @@ int main()
     vector<int> rnk(n);
     for (int i = 0; i < n; i++)
         rnk[i] = distance(un.begin(), ranges::lower_bound(un, s[i]));
-    vector<vector<ii>> nxt(n);
-    vector<vector<int>> seq(n);
-    for (int i = 0; i < z; i++) {
-        ranges::fill(nxt, vector<ii>());
-        ranges::fill(seq, vector<int>());
-        for (int j = 0; j < n; j++)
-            seq[rnk[j]].push_back(j);
-        int delt = 1 << (k - z + i);
-        for (auto& V : seq)
-            for (auto el : V) {
-                int lst = (el - delt + n) % n;
-                nxt[rnk[lst]].emplace_back(lst, rnk[el]);
-            }
-        getRanks(nxt, rnk);
-    }
-    for (int i = 0; i < z; i++) {
-        ranges::fill(nxt, vector<ii>());
-        ranges::fill(seq, vector<int>());
-        int delt = 1 << i;
-        for (int j = 0; j < n; j++)
-            seq[rnk[j]].push_back(j);
-        for (auto& V : seq)
-            for (auto el : V) {
-                int lst = (el - delt + n) % n;
-                nxt[rnk[lst]].emplace_back(lst, rnk[el]);
-            }
-        getRanks(nxt, rnk);
-    }
-    int ind = distance(nxt.begin(), ranges::min_element(nxt));
+    for (int i = 0; i < z; i++)
+        processDelta(n, 1 << (k - z + i), rnk);
+    for (int i = 0; i < k - z; i++)
+        processDelta(n, 1 << i, rnk);
+    int ind = distance(rnk.begin(), ranges::min_element(rnk));
     ranges::rotate(s, s.begin() + ind);
+    string nw = s;
+    int pnt = 0;
+    int delt = 1 << (k - z);
+    int tims = 1 << z;
+    for (int i = 0; i < delt; i++)
+        for (int j = 0; j < tims; j++)
+
     string nw = s;
     while (z--) {
         int pnt = 0;
