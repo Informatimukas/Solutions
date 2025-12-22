@@ -17,14 +17,13 @@ struct pos {
     bool flag{false};
 };
 
-void Traverse(vector<node>& nodes, vector<int>& vals, vector<int>& rig, int v, int p) {
-    static int cur = 0;
+void Traverse(vector<node>& nodes, vector<int>& vals, vector<int>& rig, int v, int p, int& cur) {
     nodes[v].lef = ++cur;
     vals[nodes[v].lef] = nodes[v].a;
     for (auto& u : nodes[v].neigh) {
         if (u == p)
             continue;
-        Traverse(nodes, vals, rig, u, v);
+        Traverse(nodes, vals, rig, u, v, cur);
     }
     nodes[v].rig = rig[nodes[v].lef] = cur;
 }
@@ -59,8 +58,10 @@ void Down(vector<pos>& st, int v) {
 void Create(vector<pos>& st, int v, int l, int r,
     const vector<int>& vals, const vector<int>& rig) {
     if (l == r) {
-        st[v].arr[vals[l]] = {l, l, 1};
-        st[v].arr[1 - vals[l]] = {{}, {}, 0};
+        st[v].arr[0] = {l, l, 1};
+        st[v].arr[1] = {{}, {}, 0};
+        if (!vals[l])
+            swap(st[v].arr[0], st[v].arr[1]);
     } else {
         int m = (l + r) / 2;
         Create(st, 2 * v, l, m, vals, rig);
@@ -103,12 +104,10 @@ int main()
             nodes[v].neigh.push_back(u);
         }
         vector<int> vals(n + 1), rig(n + 1);
-        cout << "setup" << endl;
-        Traverse(nodes, vals, rig, 1, 0);
-        cout << "traverse" << endl;
+        int cur = 0;
+        Traverse(nodes, vals, rig, 1, 0, cur);
         vector<pos> st(4 * n);
         Create(st, 1, 1, n, vals, rig);
-        cout << "Create" << endl;
         cout << st[1].arr[0].good << "\n";
         int q;
         cin >> q;
