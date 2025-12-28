@@ -9,20 +9,25 @@ int main() {
     int T;
     cin >> T;
     while (T--) {
-        int x;
-        ll m;
+        ll x, m;
         cin >> x >> m;
         ll res = 0;
         for (int i = 1; i <= m && i <= x; i++)
             if ((i ^ x) % i == 0)
                 res++;
-        for (int i = 2; i < 2 * x; i++)
-            if (((i * x) ^ x) <= m)
-                res++;
-        ll k = m / x;
-        if (k >= 2 * x)
-            res += k - 2 * x + 1;
-        cout << res << "\n";
+		ll lef = 2, rig = m / x + 1;
+		while (lef <= rig) {
+			ll mid = (lef + rig) / 2;
+			if (((mid * x) ^ x) <= m)
+				lef = mid + 1;
+			else rig = mid - 1;
+		}
+		if (rig >= 2)
+			res += rig - 1;
+		for (int j = 1; j <= 2 * x; j++)
+			if ((((rig + j) * x) ^ x) <= m)
+				++res;
+		cout << res << "\n";
     }
     return 0;
 }
