@@ -1,18 +1,20 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-using ib = pair<int, bool>;
 using ll = long long;
+using llb = pair<ll, bool>;
 
-constexpr int Inf = 1000000000;
+constexpr int Inf = 1000000007;
 
-ib Solve(const vector<int>& a, vector<int>& b, int x) {
-    array mx = {0, 0};
+llb Solve(const vector<ll>& a, vector<ll>& b, ll x) {
+    array mx = {0ll, 0ll};
     mx[0] = b[0] = x;
     for (int i = 1; i < a.size(); i++) {
         b[i] = a[i] - b[i - 1];
         if (b[i] < 0)
-            return i % 2 ? ib{Inf, false} : ib{Inf, true};
+            return i % 2 ? llb{Inf, false} : llb{Inf, true};
+        if (b[i] > a[i])
+            return i % 2 ? llb{Inf, true} : llb{Inf, false};
         mx[i % 2] = max(mx[i % 2], b[i]);
     }
     if (mx[0] >= mx[1])
@@ -29,16 +31,16 @@ int main()
     while (T--) {
         int n;
         cin >> n;
-        vector<int> a(n), b(n);
+        vector<ll> a(n), b(n);
         ll sum = 0;
         for (auto& x : a) {
             cin >> x;
             sum += x;
         }
-        int lef = 0, rig = a[0];
-        int best = Inf;
+        ll lef = 0, rig = a[0];
+        ll best = Inf;
         while (lef <= rig) {
-            int mid = (lef + rig) / 2;
+            ll mid = (lef + rig) / 2;
             auto [mx, rec] = Solve(a, b, mid);
             if (mx < best)
                 best = mx;
@@ -46,7 +48,8 @@ int main()
                 lef = mid + 1;
             else rig = mid - 1;
         }
-
+        ll res = max(best, (sum / 2 + n - 2) / (n - 1));
+        cout << res << "\n";
     }
     return 0;
 }
