@@ -17,6 +17,9 @@ llb Solve(const vector<ll>& a, vector<ll>& b, ll x) {
             return i % 2 ? llb{Inf, true} : llb{Inf, false};
         mx[i % 2] = max(mx[i % 2], b[i]);
     }
+    ll carryb = a[0] - b.back();
+    if (carryb != x)
+        return carryb > x ? llb{Inf, true} : llb{Inf, false};
     if (mx[0] >= mx[1])
         return {mx[0], false};
     return {mx[1], true};
