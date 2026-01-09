@@ -8,7 +8,7 @@ bool Solve(const vector<int>& a) {
     for (auto x : a)
         nim ^= x;
     if (nim == 0)
-        return false;
+        return a[0] > 1 && *ranges::min_element(a) == *ranges::max_element(a);
     vector<int> oth;
     for (auto x : a)
         if ((nim ^ x) >= x)
