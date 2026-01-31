@@ -6,22 +6,27 @@ using llll = pair<ll, ll>;
 
 constexpr int Maxb = 50;
 
-void Solve(int lvl, ll cur, ll mask, int lim, ll l, ll r, vector<llll>& res) {
-    if (lvl == lim || l == 0 && r == (1ll << (lvl + 1)) - 1ll) {
-        res.emplace_back(cur, cur + (1ll << (lvl + 1)) - 1ll);
-        return;
+ll simpleSolve(ll siz) {
+    ll res = 1;
+    while (siz % 2 == 0) {
+        siz /= 2;
+        res *= 2;
     }
-    ll ind = mask & 1ll << lvl;
-    if (!(r & 1ll << lvl)) {
-        Solve(lvl - 1, cur ^ ind, mask, lim, l, r, res);
-        return;
-    }
-    if (l & 1ll << lvl) {
-        Solve(lvl - 1, cur ^ ind ^ (1ll << lvl), mask, lim, l ^ (1ll << lvl), r ^ (1ll << lvl), res);
-        return;
-    }
-    Solve(lvl - 1, cur ^ ind, mask, lim, l, (1ll << lvl) - 1ll, res);
-    Solve(lvl - 1, cur ^ ind ^ (1ll << lvl), mask, lim, 0, r ^ (1ll << lvl), res);
+    return res;
+}
+
+ll Solve(int b, ll lef, ll rig) {
+    if (b < 0)
+        return 1;
+    if (!(rig & 1ll << b))
+        return Solve(b - 1, lef, rig);
+    if (lef & 1ll << b)
+        return Solve(b - 1, lef - (1ll << b), rig - (1ll << b));
+    ll cnt1 = (1ll << b) - lef;
+    ll cnt2 = rig - (1ll << b) + 1;
+    if (cnt1 == cnt2)
+        return 2 * simpleSolve(cnt1);
+    return min(simpleSolve(cnt1), simpleSolve(cnt2));
 }
 
 int main()
@@ -31,28 +36,9 @@ int main()
     int T;
     cin >> T;
     while (T--) {
-        ll l, r;
-        cin >> l >> r;
-        vector<llll> res;
-        ll curl = 0, curr = 0;
-        for (int i = Maxb - 1; i >= 0; i--) {
-            if (l & 1ll << i) {
-                Solve(Maxb - 1, 0, curl, i - 1, l, r, res);
-                curl |= 1ll << i;
-            }
-            if (!(r & 1ll << i))
-                Solve(Maxb - 1, 0, curr | 1ll << i, i - 1, l, r, res);
-            else curr |= 1ll << i;
-        }
-        ranges::sort(res.begin(), res.end());
-        ll nxt = 1, ans = 0;
-        for (auto& [lef, rig] : res) {
-            if (nxt < lef)
-                ans += lef - nxt;
-            nxt = max(nxt, rig + 1);
-        }
-        ans += (1ll << 50) - nxt;
-        cout << ans << "\n";
+        ll lef, rig;
+        cin >> lef >> rig;
+        cout << Solve(Maxb - 1, lef, rig) - 1 << "\n";
     }
     return 0;
 }
