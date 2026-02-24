@@ -9,36 +9,31 @@ int Ask(int i, int j) {
 }
 
 vector<int> Solve(int n) {
-    deque D = {n};
-    bool smaller = true;
+    deque<int> A, B;
+    B.push_back(n);
     for (int i = n - 1; i > 0; i--) {
-        if (smaller) {
-            if (Ask(i, D.front())) {
-                D.push_front(i);
-                continue;
-            }
-            int pnt = 1;
-            while (pnt < D.size() && !Ask(i, D[pnt]))
+        if (!A.empty() && Ask(i, A.back())) {
+            vector<int> res;
+            for (int j = 1; j < i; j++)
+                res.push_back(j);
+            int pnt = 0;
+            while (pnt < A.size() && !Ask(i, A[pnt]))
                 ++pnt;
-            D.insert(D.begin() + pnt, i);
-            smaller = false;
-            continue;
+            swap(A[pnt], i);
+            res.push_back(i);
+            for (auto el : A)
+                res.push_back(el);
+            for (auto el : B)
+                res.push_back(el);
+            return res;
         }
-        if (Ask(D.back(), i)) {
-            D.push_back(i);
-            continue;
+        while (!B.empty() && Ask(B.front(), i)) {
+            A.push_back(B.front());
+            B.pop_front();
         }
-        int pnt = 0;
-        while (!Ask(i, D[pnt]))
-            ++pnt;
-        vector<int> res;
-        for (int j = 1; j < i; j++)
-            res.push_back(j);
-        swap(i, D[pnt]);
-        res.push_back(i);
-        for (auto el : D)
-            res.push_back(el);
-        return res;
+        if (A.empty())
+            B.push_front(i);
+        else A.push_back(i);
     }
     return {-1};
 }
