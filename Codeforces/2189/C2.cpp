@@ -1,25 +1,10 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-bool Check(const vector<int>& a) {
-    set<int> S;
-    S.insert(a.back());
-    for (int i = a.size() - 2; i > 0; i--) {
-        S.insert(a[i]);
-        if (!S.contains(a[i] ^ i))
-            return false;
-    }
-    return true;
-}
-
-vector<int> Solve(int n) {
-    vector<int> seq(n + 1);
-    iota(seq.begin(), seq.end(), 0);
-    do {
-        if (Check(seq))
-            return seq;
-    } while (next_permutation(seq.begin() + 1, seq.end()));
-    return {-1};
+bool isPower2(int n) {
+    while (n % 2 == 0)
+        n /= 2;
+    return n == 1;
 }
 
 int main()
@@ -31,11 +16,34 @@ int main()
     while (T--) {
         int n;
         cin >> n;
-        auto res = Solve(n);
-        if (res[0] == -1)
+        if (isPower2(n)) {
             cout << "-1\n";
-        else for (int i = 1; i <= n; i++)
-            cout << res[i] << (i + 1 <= n ? ' ' : '\n');
+            continue;
+        }
+        vector<int> a(n + 1);
+        if (n % 2 == 0) {
+            a[n] = n - 2;
+            a[n - 1] = 1;
+            for (int i = n - 2; i > 0; i--)
+                a[i] = i ^ 1;
+            int b = 0;
+            while (!(n & 1 << b))
+                ++b;
+            a[1 << b] = n;
+            a[1] = (1 << b) ^ 1;
+        } else {
+            set<int> S;
+            for (int i = 2; i <= n; i++)
+                S.insert(i);
+            a[n] = 1;
+            for (int i = n - 1; i > 1; i--) {
+                a[i] = 1 ^ i;
+                S.erase(a[i]);
+            }
+            a[1] = *S.begin();
+        }
+        for (int i = 1; i <= n; i++)
+            cout << a[i] << (i + 1 <= n ? ' ' : '\n');
     }
     return 0;
 }
