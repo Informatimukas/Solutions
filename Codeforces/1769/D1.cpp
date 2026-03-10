@@ -69,7 +69,7 @@ int main()
             string s;
             cin >> s;
             ii card = parseCard(s);
-            has[i][card.first][card.second] = true;
+            has[i][card.second][card.first] = true;
         }
     vector good(2, vector(Maxs, vector(states.size(), false)));
     for (int i = 0; i < 2; i++)
