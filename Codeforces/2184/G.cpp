@@ -8,7 +8,7 @@ void Create(vector<int>& st, const vector<int>& a, int v, int l, int r) {
         int m = (l + r) / 2;
         Create(st, a, 2 * v, l, m);
         Create(st, a, 2 * v + 1, m + 1, r);
-        st[v] = max(st[2 * v], st[2 * v + 1]);
+        st[v] = min(st[2 * v], st[2 * v + 1]);
     }
 }
 
