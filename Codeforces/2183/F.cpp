@@ -26,26 +26,26 @@ void Traverse(vector<node>& nodes, int v, int p) {
 
 void Mark2(const vector<node>& nodes, int v, int p, int oth, int value, vector<vector<int>>& lca,
     vector<ii>& seq) {
-    int v1 = oth, v2 = v;
-    if (v1 > v2)
-        swap(v1, v2);
-    seq.emplace_back(v1, v2);
-    lca[v1][v2] = value;
     for (auto u : nodes[v].neigh) {
         if (u == p)
             continue;
         Mark2(nodes, u, v, oth, value, lca, seq);
     }
+    int v1 = oth, v2 = v;
+    if (v1 > v2)
+        swap(v1, v2);
+    seq.emplace_back(v1, v2);
+    lca[v1][v2] = value;
 }
 
 void Mark1(const vector<node>& nodes, int v, int p, int oth, int value, vector<vector<int>>& lca,
     vector<ii>& seq) {
-    Mark2(nodes, oth, value, v, value, lca, seq);
     for (auto u : nodes[v].neigh) {
         if (u == p)
             continue;
         Mark1(nodes, u, v, oth, value, lca, seq);
     }
+    Mark2(nodes, oth, value, v, value, lca, seq);
 }
 
 void Mark(const vector<node>& nodes, int v, int p, vector<vector<int>>& lca, vector<ii>& seq) {
@@ -73,6 +73,13 @@ void Collect(vector<node>& nodes, int v, int p) {
     }
 }
 
+void addRes(vector<vector<int>>& res, int a, int b, int val) {
+    if (a > b)
+        swap(a, b);
+    cout << "propagate " << a << " " << b << " " << val << endl;
+    res[a][b] = (res[a][b] + val) % mod;
+}
+
 int main()
 {
     ios_base::sync_with_stdio(false);
@@ -97,19 +104,21 @@ int main()
         Mark(nodes, 1, 0, lca, seq);
         vector res(n + 1, vector<int>(n + 1));
         for (auto& [u, v] : seq) {
-            cout << "u = " << u << ", v = " << v << ", lca = " << lca[u][v] << endl;
-            if (a[u - 1] == a[v - 1])
+            if (a[u - 1] == a[v - 1]) {
                 res[u][v] = (res[u][v] + (u == v ? 1 : 2)) % mod;
-            cout << "res[" << u << ", v = " << v << "] = " << res[u][v] << endl;
-            nodes[lca[u][v]].res = (nodes[lca[u][v]].res + res[u][v]) % mod;
-            int pu = nodes[u].P, pv = nodes[v].P;
-            if (pu && pv) {
-                if (pu > pv)
-                    swap(pu, pv);
-                if (a[pu] == a[pv])
-                    res[pu][pv] = (res[pu][pv] + res[u][v]) % mod;
+                cout << "res[" << u << "][" << v << "] = " << res[u][v] << endl;
+                cout << "add to " << lca[u][v] << endl;
+                nodes[lca[u][v]].res = (nodes[lca[u][v]].res + res[u][v]) % mod;
             }
+            int pu = nodes[u].P, pv = nodes[v].P;
+            if (pu)
+                addRes(res, pu, v, res[u][v]);
+            if (pv)
+                addRes(res, u, pv, res[u][v]);
+            if (pu && pv)
+                addRes(res, pu, pv, mod - res[u][v]);
         }
+        Collect(nodes, 1, 0);
         for (int i = 1; i <= n; i++)
             cout << nodes[i].res << (i + 1 <= n ? ' ' : '\n');
     }
