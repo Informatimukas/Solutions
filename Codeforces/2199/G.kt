@@ -100,6 +100,7 @@ fun PrintWriter.solve() {
               solveRectangle(n, m, r, false, true, true, false) +
               solveRectangle(n, m, r, false, true, true, true) +
               solveRectangle(n, m, r, true, false, false, true) +
+              solveRectangle(n, m, r, true, false, true, false) +
               solveRectangle(n, m, r, true, false, true, true) +
               solveRectangle(n, m, r, true, true, false, true) +
               solveRectangle(n, m, r, true, true, true, false) +
