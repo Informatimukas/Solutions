@@ -37,46 +37,22 @@ fun PrintWriter.solve() {
   var T = readInt()
   while (T > 0) {
     T--
-    val n = readInt()
-    var A = StringBuilder("")
-    var B = StringBuilder("")
-    var found = false
-    if (n == 1) {
-        A = StringBuilder("*")
-        B = StringBuilder(".")
-        found = true
+    var a = readInt()
+    var b = readInt()
+    var c = readInt()
+    var d = readInt()
+    if (a > b) {
+        var tmp = a
+        a = b
+        b = tmp
+        tmp = c
+        c = d
+        d = tmp
     }
-    if (n % 5 == 0) {
-        A = StringBuilder(".".repeat(n / 5 * 3))
-        B = StringBuilder(".".repeat(n / 5 * 3))
-        for (i in 0..n/5-1)
-            B[3 * i + 1] = '*'
-        found = true
-    }
-    if (n >= 3 && (n - 3) % 5 == 0) {
-        A = StringBuilder(".".repeat(n / 5 * 3 + 2))
-        B = StringBuilder(".".repeat(n / 5 * 3 + 2))
-        B[0] = '*'
-        for (i in 0..n/5-1)
-            B[2 + 3 * i + 1] = '*'
-        found = true
-    }
-    if (n >= 6 && (n - 6) % 5 == 0) {
-        A = StringBuilder(".".repeat((n / 5 - 1) * 3 + 4))
-        B = StringBuilder(".".repeat((n / 5 - 1) * 3 + 4))
-        B[0] = '*'
-        for (i in 0..(n / 5 - 1))
-            B[2 + 3 * i + 1] = '*'
-        found = true
-    }
-    if (found) {
-        println("YES")
-        val sA = A.toString()
-        val sB = B.toString()
-        println(sA.length)
-        println(sA)
-        println(sB)
-    } else println("NO")
+    var res = c + d - a - b
+    if (b <= min(c, d))
+        res -= (min(c, d) - b)
+    println(res)
   }
   println()
 }
