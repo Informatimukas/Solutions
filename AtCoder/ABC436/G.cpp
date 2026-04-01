@@ -1,195 +1,374 @@
-#include <bits/stdc++.h>
+#include<bits/stdc++.h>
+
 using namespace std;
 
-#define pb push_back
-typedef long long ll;
-#define SZ 233333
-const int MOD=998244353;
+using ll = long long;
+using ull = unsigned long long;
+using pii = pair<int, int>;
+using pll = pair<long long, long long>;
+using tiii = tuple<int, int, int>;
+using ldb = long double;
+//#define double ldb
 
-ll qp(ll a,ll b)
-{
-	ll x=1; a%=MOD;
-	while(b)
-	{
-		if(b&1) x=x*a%MOD;
-		a=a*a%MOD; b>>=1;
-	}
-	return x;
+template<class T>
+ostream& operator<<(ostream& os, const pair<T, T> pr) {
+  return os << pr.first << ' ' << pr.second;
 }
-namespace linear_seq {
-inline vector<int> BM(vector<int> x)
-{
-	//ls: (shortest) relation sequence (after filling zeroes) so far
-	//cur: current relation sequence
-	vector<int> ls,cur;
-	//lf: the position of ls (t')
-	//ld: delta of ls (v')
-	int lf,ld;
-	for(int i=0;i<int(x.size());++i)
-	{
-		ll t=0;
-		//evaluate at position i
-		for(int j=0;j<int(cur.size());++j)
-			t=(t+x[i-j-1]*(ll)cur[j])%MOD;
-		if((t-x[i])%MOD==0) continue; //good so far
-		//first non-zero position
-		if(!cur.size())
-		{
-			cur.resize(i+1);
-			lf=i; ld=(t-x[i])%MOD;
-			continue;
-		}
-		//cur=cur-c/ld*(x[i]-t)
-		ll k=-(x[i]-t)*qp(ld,MOD-2)%MOD/*1/ld*/;
-		vector<int> c(i-lf-1); //add zeroes in front
-		c.pb(k);
-		for(int j=0;j<int(ls.size());++j)
-			c.pb(-ls[j]*k%MOD);
-		if(c.size()<cur.size()) c.resize(cur.size());
-		for(int j=0;j<int(cur.size());++j)
-			c[j]=(c[j]+cur[j])%MOD;
-		//if cur is better than ls, change ls to cur
-		if(i-lf+(int)ls.size()>=(int)cur.size())
-			ls=cur,lf=i,ld=(t-x[i])%MOD;
-		cur=c;
-	}
-	for(int i=0;i<int(cur.size());++i)
-		cur[i]=(cur[i]%MOD+MOD)%MOD;
-	return cur;
+template<class T, size_t N>
+ostream& operator<<(ostream& os, const array<T, N> &arr) {
+  for(const T &X : arr)
+    os << X << ' ';
+  return os;
 }
-int m; //length of recurrence
-//a: first terms
-//h: relation
-ll a[SZ],h[SZ],t_[SZ],s[SZ],t[SZ];
+template<class T>
+ostream& operator<<(ostream& os, const vector<T> &vec) {
+  for(const T &X : vec)
+    os << X << ' ';
+  return os;
+}
 
-const int mod = 998244353;
-int root, root_1;
-const int root_pw = 1<<19;
-const int Maxm = root_pw;
+//////////////////////////////////////////////////
+//template name: mint
+//author: __Shioko(Misuki)
+//last update: 2022/06/01
+//note: inversion only works when MOD is a prime
+struct mint {
+  static const long long MOD = 998244353;
+  long long _val;
 
-int toPower(int a, int p)
-{
-    int res = 1;
-    while (p) {
-        if (p & 1) res = ll(res) * a % mod;
-        p >>= 1; a = ll(a) * a % mod;
+  mint(long long init = 0) {
+    _val = init % MOD;
+    (*this).norm();
+  }
+
+  mint POW(long long index) {
+    if (index == 0)
+      return mint(1ll);
+    mint base = *this;
+    mint res = (base == 0ll ? 0ll : 1ll);
+    while(index) {
+      if (index & 1)
+        res *= base;
+      base *= base, index >>= 1;
     }
     return res;
-}
+  }
 
-int Inv(int x) { return toPower(x, mod - 2); }
+  mint inv() { return (*this).POW(MOD - 2); }
 
-void fft (vector <int> &a, bool invert) {
-    int n = a.size();
+  mint& norm() {
+    if (_val >= MOD)
+      _val -= MOD;
+    if (_val < 0)
+      _val += MOD;
+    return *this;
+  }
 
-    for (int i=1, j=0; i<n; ++i) {
-        int bit = n >> 1;
-        for (; j>=bit; bit>>=1)
-            j -= bit;
-        j += bit;
-        if (i < j)
-            swap (a[i], a[j]);
+  mint& operator+=(mint b) {
+    _val += b._val;
+    return (*this).norm();
+  }
+  mint& operator-=(mint b) {
+    _val -= b._val;
+    return (*this).norm();
+  }
+  mint& operator*=(mint b) {
+    _val = (_val * b._val) % MOD;
+    return *this;
+  }
+  mint& operator/=(mint b) {
+    _val = (_val * b.inv()._val) % MOD;
+    return *this;
+  }
+
+  mint& operator++() {
+    _val += 1;
+    return (*this).norm();
+  }
+  mint& operator--() {
+    _val -= 1;
+    return (*this).norm();
+  }
+  mint operator++(signed) {
+    mint tmp = *this;
+    ++(*this);
+    return tmp;
+  }
+  mint operator--(signed) {
+    mint tmp = *this;
+    --(*this);
+    return tmp;
+  }
+
+  mint operator-() { return mint(-_val); }
+  bool operator==(mint b) { return _val == b._val; }
+  bool operator!=(mint b) { return _val != b._val; }
+
+  friend mint operator+(mint a, mint b) { return a += b; }
+  friend mint operator-(mint a, mint b) { return a -= b; }
+  friend mint operator*(mint a, mint b) { return a *= b; }
+  friend mint operator/(mint a, mint b) { return a /= b; }
+
+  friend ostream& operator<<(ostream& os, const mint& b) {
+    return os << b._val;
+  }
+  friend istream& operator>>(istream& is, mint& b) {
+    long long val;
+    is >> val;
+    b = mint(val);
+    return is;
+  }
+};
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+//template name: FPS
+//author: __Shioko(Misuki)
+//last update: 2023/01/24
+//include: mint(with NTT-able MOD)
+
+bool init_NTT = false;
+
+struct FPS : vector<mint> {
+
+  using vector<mint>::vector;
+
+  static const int K = 23, C = 119, R = 3;
+  static mint w[K + 1], w_inv[K + 1];
+  static bool init_NTT;
+
+  void NTT(bool inverse) {
+    if (!init_NTT) {
+      w[K] = mint(R).POW(C);
+      for(int i = K - 1; i >= 0; i--)
+        w[i] = w[i + 1] * w[i + 1];
+      for(int i = 0; i <= K; i++)
+        w_inv[i] = 1 / w[i];
+
+      init_NTT = true;
+    }
+    int n = this -> size();
+    FPS tmp = *this;
+    for(int i = 0; i < this -> size(); i++) {
+      int idx = 0;
+      int lgn = __lg(n);
+      for(int j = lgn - 1; j >= 0; j--)
+        idx = (idx << 1) | ((i >> (lgn - j - 1)) & 1);
+      (*this)[idx] = tmp[i];
     }
 
-    for (int len=2; len<=n; len<<=1) {
-        int wlen = invert ? root_1 : root;
-        for (int i=len; i<root_pw; i<<=1)
-            wlen = int (wlen * 1ll * wlen % mod);
-        for (int i=0; i<n; i+=len) {
-            int w = 1;
-            for (int j=0; j<len/2; ++j) {
-                int u = a[i+j],  v = int (a[i+j+len/2] * 1ll * w % mod);
-                a[i+j] = u+v < mod ? u+v : u+v-mod;
-                a[i+j+len/2] = u-v >= 0 ? u-v : u-v+mod;
-                w = int (w * 1ll * wlen % mod);
-            }
+    for(int l = 2; l <= n; l <<= 1) {
+      mint w_l = (inverse ? w_inv[__lg(l)] : w[__lg(l)]);
+      for(int i = 0; i < n; i += l) {
+        mint w = 1;
+        for(int j = 0; j < (l >> 1); j += 1) {
+          mint t = (*this)[i + j + l / 2] * w;
+          (*this)[i + j + l / 2] = (*this)[i + j] - t;
+          (*this)[i + j] = (*this)[i + j] + t;
+          w *= w_l;
         }
+      }
     }
-    if (invert) {
-        int nrev = Inv(n);
-        for (int i=0; i<n; ++i)
-            a[i] = int (a[i] * 1ll * nrev % mod);
+
+    if (inverse) {
+      mint INV = mint(1) / n;
+      for(int i = 0; i < n; i++)
+        (*this)[i] *= INV;
     }
+  }
+  FPS& operator+=(FPS &b) {
+    if (this -> size() < b.size()) this -> resize(b.size(), 0);
+    for(int i = 0; i < b.size(); i++)
+      (*this)[i] += b[i];
+    return *this;
+  }
+  FPS& operator-=(FPS &b) {
+    if (this -> size() < b.size()) this -> resize(b.size(), 0);
+    for(int i = 0; i < b.size(); i++)
+      (*this)[i] -= b[i];
+    return *this;
+  }
+  FPS& operator*=(FPS b) {
+    int mxSz = (int)this -> size() + (int)b.size() - 1;
+    int n = (mxSz == 1) ? 2 : (1 << (__lg(mxSz - 1) + 1));
+
+    this -> resize(n, 0);
+    b.resize(n, 0);
+
+    this -> NTT(false);
+    b.NTT(false);
+    for(int i = 0; i < n; i++)
+      (*this)[i] *= b[i];
+    this -> NTT(true);
+    this -> resize(mxSz);
+    return *this;
+  }
+  FPS& operator*=(mint b) {
+    for(int i = 0; i < this -> size(); i++)
+      (*this)[i] *= b;
+    return (*this);
+  }
+
+  FPS integral() {
+    vector<mint> Inv(this -> size() + 1);
+    Inv[1] = 1;
+    for(int i = 2; i < Inv.size(); i++)
+      Inv[i] = (mint::MOD - mint::MOD / i) * Inv[mint::MOD % i];
+    FPS Q(this -> size() + 1, 0);
+    for(int i = 0; i < this -> size(); i++)
+      Q[i + 1] = (*this)[i] * Inv[i + 1];
+
+    return Q;
+  }
+
+  FPS derivative() {
+    assert(!this -> empty());
+
+    FPS Q((int)(this -> size()) - 1);
+    for(int i = 1; i < this -> size(); i++)
+      Q[i - 1] = (*this)[i] * i;
+
+    return Q;
+  }
+
+  FPS inv(int k) { // 1 / FPS (mod x^k)
+    assert(!this -> empty() and (*this)[0] != 0);
+
+    FPS Q(1, 1 / (*this)[0]);
+    for(int i = 1; (1 << (i - 1)) < k; i++) {
+      FPS P = (*this);
+      P.resize(1 << i, 0);
+      Q = Q * (FPS(1, 2) - P * Q);
+      Q.resize(1 << i, 0);
+    }
+    Q.resize(k);
+
+    return Q;
+  }
+
+  FPS log(int k) {
+    assert(!this -> empty() and (*this)[0] == 1);
+
+    FPS Q = *this;
+    Q = (Q.derivative() * Q.inv(k));
+    Q.resize(k - 1);
+    return Q.integral();
+  }
+
+  FPS exp(int k) {
+    assert(!this -> empty() and (*this)[0] == 0);
+
+    FPS Q(1, 1);
+    for(int i = 1; (1 << (i - 1)) < k; i++) {
+      FPS P = (*this);
+      P.resize(1 << i, 0);
+      Q = Q * (FPS(1, 1) + P - Q.log(1 << i));
+      Q.resize(1 << i, 0);
+    }
+    Q.resize(k);
+
+    return Q;
+  }
+
+  FPS pow(long long idx, int k) {
+    if (idx == 0) {
+      FPS res(k, 0);
+      res[0] = 1;
+      return res;
+    }
+    for(int i = 0; i < this -> size() and i * idx < k; i++) {
+      if ((*this)[i] != 0) {
+        mint Inv = 1 / (*this)[i];
+        FPS Q((int)this -> size() - i);
+        for(int j = i; j < this -> size(); j++)
+          Q[j - i] = (*this)[j] * Inv;
+        Q = (Q.log(k) * idx).exp(k);
+        FPS Q2(k, 0);
+        mint Pow = (*this)[i].POW(idx);
+        for(int j = 0; j + i * idx < k; j++)
+          Q2[j + i * idx] = Q[j] * Pow;
+        return Q2;
+      }
+    }
+    return FPS(k, 0);
+  }
+
+  friend FPS operator+(FPS a, FPS b) { return a += b; }
+  friend FPS operator-(FPS a, FPS b) { return a -= b; }
+  friend FPS operator*(FPS a, FPS b) { return a *= b; }
+  friend FPS operator*(FPS a, mint b) { return a *= b; }
+};
+
+bool FPS::init_NTT = false;
+mint FPS::w[K + 1];
+mint FPS::w_inv[K + 1];
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////
+//template name: Bostan-Mori
+//author: __Shioko(Misuki)
+//last update: 2023/01/25
+//include: mint(with NTT-able MOD), FPS
+
+mint BostanMori(FPS P, FPS Q, long long k) {
+  assert(!P.empty() and !Q.empty() and Q[0] != 0);
+
+  int d = max((int)P.size(), (int)Q.size() - 1);
+  P.resize(d, 0);
+  Q.resize(d + 1, 0);
+
+  int sz = (2 * d + 1 == 1 ? 2 : (1 << __lg(2 * d) + 1));
+  while(k) {
+    FPS Qneg(sz);
+    for(int i = 0; i < Q.size(); i++)
+      Qneg[i] = Q[i] * ((i & 1) ? -1 : 1);
+    Qneg.NTT(false);
+
+    FPS U(sz), V(sz);
+    for(int i = 0; i < P.size(); i++)
+      U[i] = P[i];
+    for(int i = 0; i < Q.size(); i++)
+      V[i] = Q[i];
+
+    U.NTT(false);
+    V.NTT(false);
+    for(int i = 0; i < sz; i++)
+      U[i] *= Qneg[i];
+    for(int i = 0; i < sz; i++)
+      V[i] *= Qneg[i];
+    U.NTT(true);
+    V.NTT(true);
+
+    for(int i = k & 1; i <= 2 * d - 1; i += 2)
+      P[i >> 1] = U[i];
+    for(int i = 0; i <= 2 * d; i += 2)
+      Q[i >> 1] = V[i];
+    k >>= 1;
+  }
+
+  return P[0] / Q[0];
 }
 
-void Multiply(vector <int> &a, vector <int> &b)
-{
-    int n = 1;
-    while (n < a.size() + b.size())
-        n <<= 1;
-    a.resize(n);
-    b.resize(n);
-    fft(a, false);
-    fft(b, false);
-    for (int i = 0; i < n; i++)
-        a[i] = ll(a[i]) * b[i] % mod;
-    fft(a, true);
-    while (a.size() > 1 && a.back() == 0)
-        a.pop_back();
-}
+//////////////////////////////////////////////////
 
-//calculate p*q mod f
-inline void mull(ll*p,ll*q)
-{
-	for(int i=0;i<m+m;++i) t_[i]=0;
-	vector<int> A(m, 0), B(m, 0);
-	for (int i = 0; i < m; i++) {
-		A[i] = p[i];
-		B[i] = q[i];
-	}
-	Multiply(A, B);
-	for (int i = 0; i < m; i++)
-		A[i] = 0;
-	for (int i = 0; i < m; i++)
-		B[i] = h[m - 1 - i];
-	Multiply(A, B);
-	for(int i=0;i<m;++i) p[i]=A[i + m+m-1];
-}
-inline ll calc(ll K)
-{
-	for(int i=m;~i;--i)
-		s[i]=t[i]=0;
-	//init
-	s[0]=1; if(m!=1) t[1]=1; else t[0]=h[0];
-	//binary-exponentiation
-	while(K)
-	{
-		if(K&1) mull(s,t);
-		mull(t,t); K>>=1;
-	}
-	ll su=0;
-	for(int i=0;i<m;++i) su=(su+s[i]*a[i])%MOD;
-	return (su%MOD+MOD)%MOD;
-}
-inline int work(vector<int> x,ll n)
-{
-	if(n<int(x.size())) return x[n];
-	vector<int> v=BM(x); m=v.size(); if(!m) return 0;
-	for(int i=0;i<m;++i) h[i]=v[i],a[i]=x[i];
-	return calc(n);
-}
-}
-using linear_seq::work;
-
-int main()
-{
-    ios_base::sync_with_stdio(false);
-    cin.tie(nullptr);
-	linear_seq::root = linear_seq::toPower(3, 1904);
-	linear_seq::root_1 = linear_seq::Inv(linear_seq::root);
-	int n;
-	ll m;
-	cin >> n >> m;
-	vector<int> a(n);
-	for (auto& x : a)
-		cin >> x;
-	vector seq(15005, 0);
-	seq[0] = 1;
-	for (auto& x : a)
-		for (int j = 0; j + x < seq.size(); j++)
-			seq[j + x] = (seq[j + x] + seq[j]) % MOD;
-	for (int i = 1; i < seq.size(); i++)
-		seq[i] = (seq[i] + seq[i - 1]) % MOD;
-	cout << work(seq, m) << "\n";
-    return 0;
+signed main() {
+  ios::sync_with_stdio(false), cin.tie(NULL);
+  int n;
+  ll m;
+  cin >> n >> m;
+  FPS P(1);
+  P[0] = 1;
+  FPS Q(2);
+  Q[0] = 1;
+  Q[1] = -1;
+  for (int i = 0; i < n; i++) {
+    int a;
+    cin >> a;
+    FPS tmp(a + 1);
+    tmp[0] = 1;
+    tmp[a] = -1;
+    Q = Q * tmp;
+  }
+  cout << BostanMori(P, Q, m) << '\n';
+  return 0;
 }
