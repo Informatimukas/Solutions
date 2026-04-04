@@ -5,7 +5,7 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
 struct item;
 
-using pitem = shared_ptr<item>;
+using pitem = item*;
 
 struct item {
     int prior, value, cnt;
@@ -26,7 +26,7 @@ void upd_cnt(pitem it) {
 
 pitem downOn(pitem t, int delt) {
     if (!t) return nullptr;
-    auto nt = make_shared<item>(*t);
+    auto nt = new item(*t);
     nt->value += delt;
     nt->flag += delt;
     return nt;
@@ -34,7 +34,7 @@ pitem downOn(pitem t, int delt) {
 
 pitem Down(pitem t) {
     if (!t || t->flag == 0) return t;
-    auto nt = make_shared<item>(*t);
+    auto nt = new item(*t);
     if (nt->l) nt->l = downOn(nt->l, nt->flag);
     if (nt->r) nt->r = downOn(nt->r, nt->flag);
     nt->flag = 0;
@@ -47,12 +47,12 @@ pitem Merge(pitem l, pitem r) {
     l = Down(l);
     r = Down(r);
     if (l->prior > r->prior) {
-        auto newl = make_shared<item>(*l);
+        auto newl = new item(*l);
         newl->r = Merge(newl->r, r);
         upd_cnt(newl);
         return newl;
     }
-    auto newr = make_shared<item>(*r);
+    auto newr = new item(*r);
     newr->l = Merge(l, newr->l);
     upd_cnt(newr);
     return newr;
@@ -63,12 +63,12 @@ void split(pitem t, pitem& l, pitem& r, int key) {
         return void(l = r = nullptr);
     t = Down(t);
     if (key <= t->value) {
-        auto nt = make_shared<item>(*t);
+        auto nt = new item(*t);
         split(t->l, l, nt->l, key);
         r = nt;
         upd_cnt(r);
     } else {
-        auto nt = make_shared<item>(*t);
+        auto nt = new item(*t);
         split(t->r, nt->r, r, key);
         l = nt;
         upd_cnt(l);
@@ -104,12 +104,12 @@ int main()
         for (auto& x : a)
             cin >> x;
         vector<pitem> ltreap(n, nullptr), rtreap(n, nullptr);
-        pitem treap;
+        pitem treap = nullptr;
         for (int i = 0; i < n; i++) {
             pitem lef, rig;
             split(treap, lef, rig, a[i]);
             lef = downOn(lef, 1);
-            ltreap[i] = Merge(lef, make_shared<item>(a[i]));
+            ltreap[i] = Merge(lef, new item(a[i]));
             ltreap[i] = Merge(ltreap[i], rig);
             treap = ltreap[i];
         }
@@ -118,7 +118,7 @@ int main()
             pitem lef, rig;
             split(treap, lef, rig, a[i]);
             lef = downOn(lef, 1);
-            rtreap[i] = Merge(lef, make_shared<item>(a[i]));
+            rtreap[i] = Merge(lef, new item(a[i]));
             rtreap[i] = Merge(rtreap[i], rig);
             treap = rtreap[i];
         }
