@@ -2,6 +2,7 @@
 using namespace std;
 
 using ll = long long;
+using lli = pair<ll, int>;
 
 constexpr ll lim = 1e16;
 
@@ -39,27 +40,6 @@ vector<vector<ll>> computeUp(const vector<vector<int>>& B) {
     return res;
 }
 
-bool Check(vector<vector<int>>& B, const vector<array<int, 3>>& seq, ll x) {
-    auto L = computeDown(B);
-    if (L.back().back() <= x)
-        return true;
-    auto R = computeUp(B);
-    for (auto& arr : seq) {
-        if (arr[0] <= 0)
-            break;
-        int r = arr[1], c = arr[2];
-        ll cur = L[r][c] + R[r][c] - B[r][c];
-        if (cur > x) {
-            B[r][c] = -B[r][c];
-            L = computeDown(B);
-            auto res = L.back().back() <= x;
-            B[r][c] = -B[r][c];
-            return res;
-        }
-    }
-    return false;
-}
-
 int main()
 {
     ios_base::sync_with_stdio(false);
@@ -70,22 +50,31 @@ int main()
         int n, m;
         cin >> n >> m;
         vector B(n, vector<int>(m));
-        vector<array<int, 3>> seq;
-        seq.reserve(n * m);
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                cin >> B[i][j];
+        auto L = computeDown(B);
+        auto R = computeUp(B);
+        vector<array<lli, 2>> best(n + m);
+        for (int i = 0; i < n + m; i++)
+            best[i][0] = best[i][1] = {-lim, 0};
         for (int i = 0; i < n; i++)
             for (int j = 0; j < m; j++) {
-                cin >> B[i][j];
-                seq.push_back({B[i][j], i, j});
+                ll val = L[i][j] + R[i][j] - B[i][j];
+                lli p = {val, B[i][j]};
+                int ind = i + j;
+                if (p > best[ind][0])
+                    best[ind][1] = best[ind][0], best[ind][0] = p;
+                else if (p > best[ind][1])
+                    best[ind][1] = p;
             }
-        ranges::sort(seq, greater());
-        ll lef = -lim, rig = lim;
-        while (lef <= rig) {
-            ll mid = (lef + rig) / 2;
-            if (Check(B, seq, mid))
-                rig = mid - 1;
-            else lef = mid + 1;
-        }
-        cout << lef << "\n";
+        ll res = lim;
+        for (int i = 0; i < n + m - 1; i++)
+            if (best[i][0].second <= 0)
+                res = min(res, best[i][0].first);
+            else res = min(res, max(best[i][0].first - 2 * best[i][0].second,
+                        best[i][1].first));
+        cout << res << "\n";
     }
     return 0;
 }
