@@ -7,77 +7,19 @@ constexpr int mod = 998244353;
 
 struct node {
     vector<int> neigh;
-    int L{0};
-    int siz{1};
-    int P{0};
+    int P{0}, L{0};
     int res{0};
 };
 
-void Traverse(vector<node>& nodes, int v, int p) {
+void Traverse(vector<node>& nodes, int v, int p, vector<vector<int>>& bylevel) {
+    bylevel[nodes[v].L].push_back(v);
     nodes[v].P = p;
     for (auto u : nodes[v].neigh) {
         if (u == p)
             continue;
         nodes[u].L = nodes[v].L + 1;
-        Traverse(nodes, u, v);
-        nodes[v].siz += nodes[u].siz;
+        Traverse(nodes, u, v, bylevel);
     }
-}
-
-void Mark2(const vector<node>& nodes, int v, int p, int oth, int value, vector<vector<int>>& lca,
-    vector<ii>& seq) {
-    for (auto u : nodes[v].neigh) {
-        if (u == p)
-            continue;
-        Mark2(nodes, u, v, oth, value, lca, seq);
-    }
-    int v1 = oth, v2 = v;
-    if (v1 > v2)
-        swap(v1, v2);
-    seq.emplace_back(v1, v2);
-    lca[v1][v2] = value;
-}
-
-void Mark1(const vector<node>& nodes, int v, int p, int oth, int value, vector<vector<int>>& lca,
-    vector<ii>& seq) {
-    for (auto u : nodes[v].neigh) {
-        if (u == p)
-            continue;
-        Mark1(nodes, u, v, oth, value, lca, seq);
-    }
-    Mark2(nodes, oth, value, v, value, lca, seq);
-}
-
-void Mark(const vector<node>& nodes, int v, int p, vector<vector<int>>& lca, vector<ii>& seq) {
-    for (int i = 0; i < nodes[v].neigh.size(); ++i) {
-        int u1 = nodes[v].neigh[i];
-        if (u1 == p)
-            continue;
-        Mark(nodes, u1, v, lca, seq);
-        for (int j = i + 1; j < nodes[v].neigh.size(); ++j) {
-            int u2 = nodes[v].neigh[j];
-            if (u2 == p)
-                continue;
-            Mark1(nodes, u1, v, u2, v, lca, seq);
-        }
-    }
-    Mark2(nodes, v, p, v, v, lca, seq);
-}
-
-void Collect(vector<node>& nodes, int v, int p) {
-    for (auto u : nodes[v].neigh) {
-        if (u == p)
-            continue;
-        Collect(nodes, u, v);
-        nodes[v].res = (nodes[v].res + nodes[u].res) % mod;
-    }
-}
-
-void addRes(vector<vector<int>>& res, int a, int b, int val) {
-    if (a > b)
-        swap(a, b);
-    cout << "propagate " << a << " " << b << " " << val << endl;
-    res[a][b] = (res[a][b] + val) % mod;
 }
 
 int main()
@@ -98,27 +40,37 @@ int main()
             nodes[u].neigh.push_back(v);
             nodes[v].neigh.push_back(u);
         }
-        Traverse(nodes, 1, 0);
-        vector lca(n + 1, vector<int>(n + 1));
+        vector<vector<int>> bylevel(n);
+        Traverse(nodes, 1, 0, bylevel);
         vector<ii> seq;
-        Mark(nodes, 1, 0, lca, seq);
-        vector res(n + 1, vector<int>(n + 1));
-        for (auto& [u, v] : seq) {
-            if (a[u - 1] == a[v - 1]) {
-                res[u][v] = (res[u][v] + (u == v ? 1 : 2)) % mod;
-                cout << "res[" << u << "][" << v << "] = " << res[u][v] << endl;
-                cout << "add to " << lca[u][v] << endl;
-                nodes[lca[u][v]].res = (nodes[lca[u][v]].res + res[u][v]) % mod;
-            }
-            int pu = nodes[u].P, pv = nodes[v].P;
-            if (pu)
-                addRes(res, pu, v, res[u][v]);
-            if (pv)
-                addRes(res, u, pv, res[u][v]);
-            if (pu && pv)
-                addRes(res, pu, pv, mod - res[u][v]);
+        seq.reserve(n * n);
+        for (int i = n - 1; i >= 0; i--) {
+            for (int j = n - 1; j > i; j--)
+                for (auto& a : bylevel[i])
+                    for (auto& b : bylevel[j]) {
+                        seq.emplace_back(a, b);
+                        seq.emplace_back(b, a);
+                    }
+            for (auto& a : bylevel[i])
+                for (auto& b : bylevel[i])
+                    seq.emplace_back(a, b);
         }
-        Collect(nodes, 1, 0);
+        vector res(n + 1, vector(n + 1, array{0, 0, 0}));
+        for (auto& [u, v] : seq) {
+            res[nodes[u].P][v][0] = (res[nodes[u].P][v][0] + res[u][v][0]) % mod;
+            res[u][v][1] = (res[u][v][1] + res[u][v][0]) % mod;
+            if (a[u - 1] == a[v - 1]) {
+                int ways = (res[u][v][1] + 1) % mod;
+                res[u][v][2] = (res[u][v][2] + ways) % mod;
+                res[nodes[u].P][nodes[v].P][0] = (res[nodes[u].P][nodes[v].P][0] + ways) % mod;
+            }
+            res[u][nodes[v].P][1] = (res[u][nodes[v].P][1] + res[u][v][1]) % mod;
+            if (u == v)
+                nodes[u].res = (nodes[u].res + res[u][v][2]) % mod;
+            if (nodes[u].L >= nodes[v].L)
+                res[nodes[u].P][v][2] = (res[nodes[u].P][v][2] + res[u][v][2]) % mod;
+            else res[u][nodes[v].P][2] = (res[u][nodes[v].P][2] + res[u][v][2]) % mod;
+        }
         for (int i = 1; i <= n; i++)
             cout << nodes[i].res << (i + 1 <= n ? ' ' : '\n');
     }
