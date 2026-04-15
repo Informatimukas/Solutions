@@ -3,91 +3,109 @@ using namespace std;
 
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 
-struct item;
-
-using pitem = item*;
-
 struct item {
     int prior, value, cnt;
     int flag;
-    pitem l, r;
+    int l, r;
     item(int value): prior{uniform_int_distribution(0, 1000000000)(rng)},
-        value{value}, cnt{1}, flag{0}, l{nullptr}, r{nullptr} {}
+        value{value}, cnt{1}, flag{0}, l{0}, r{0} {}
 };
 
-int cnt(pitem it) {
-    return it ? it->cnt : 0;
+vector<item> all;
+
+int cnt(int it) {
+    return it ? all[it].cnt : 0;
 }
 
-void upd_cnt(pitem it) {
+void upd_cnt(int it) {
     if (it)
-        it->cnt = cnt(it->l) + cnt(it->r) + 1;
+        all[it].cnt = cnt(all[it].l) + cnt(all[it].r) + 1;
 }
 
-pitem downOn(pitem t, int delt) {
-    if (!t) return nullptr;
-    auto nt = new item(*t);
-    nt->value += delt;
-    nt->flag += delt;
-    return nt;
-}
-
-pitem Down(pitem t) {
-    if (!t || t->flag == 0) return t;
-    auto nt = new item(*t);
-    if (nt->l) nt->l = downOn(nt->l, nt->flag);
-    if (nt->r) nt->r = downOn(nt->r, nt->flag);
-    nt->flag = 0;
-    return nt;
-}
-
-pitem Merge(pitem l, pitem r) {
-    if (!l) return r;
-    if (!r) return l;
-    l = Down(l);
-    r = Down(r);
-    if (l->prior > r->prior) {
-        auto newl = new item(*l);
-        newl->r = Merge(newl->r, r);
-        upd_cnt(newl);
-        return newl;
+void push(int it) {
+    if (it && all[it].flag) {
+        all[it].value += all[it].flag;
+        if (all[it].l)
+            all[all[it].l].flag += all[it].flag;
+        if (all[it].r)
+            all[all[it].r].flag += all[it].flag;
+        all[it].flag = 0;
     }
-    auto newr = new item(*r);
-    newr->l = Merge(l, newr->l);
-    upd_cnt(newr);
-    return newr;
 }
 
-void split(pitem t, pitem& l, pitem& r, int key) {
+void merge(int& t, int l, int r) {
+    push (l);
+    push (r);
+    if (!l || !r)
+        t = l ? l : r;
+    else if (all[l].prior > all[r].prior)
+        merge (all[l].r, all[l].r, r),  t = l;
+    else
+        merge (all[r].l, l, all[r].l),  t = r;
+    upd_cnt (t);
+}
+
+void split(int t, int& l, int& r, int key) {
     if (!t)
-        return void(l = r = nullptr);
-    t = Down(t);
-    if (key <= t->value) {
-        auto nt = new item(*t);
-        split(t->l, l, nt->l, key);
-        r = nt;
-        upd_cnt(r);
+        return void(l = r = 0);
+    push (t);
+    if (key <= all[t].value)
+        split (all[t].l, l, all[t].l, key),  r = t;
+    else
+        split (all[t].r, all[t].r, r, key),  l = t;
+    upd_cnt (t);
+}
+
+int getBad(int t, int key) {
+    if (!t) return 0;
+    push(t);
+    if (key <= all[t].value)
+        return getBad(all[t].l, key);
+    return 1 + cnt(all[t].l) + getBad(all[t].r, key);
+}
+
+void processTreap(int& treap, int x, int a) {
+    if (a >= x) {
+        int tmp;
+        split(treap, treap, tmp, x);
+        if (treap)
+            all[treap].flag++;
     } else {
-        auto nt = new item(*t);
-        split(t->r, nt->r, r, key);
-        l = nt;
-        upd_cnt(l);
+        int lef, rig;
+        split(treap, lef, rig, a);
+        if (lef)
+            all[lef].flag++;
+        all.emplace_back(a);
+        int index = all.size() - 1;
+        merge(treap, lef, index);
+        merge(treap, treap, rig);
     }
 }
 
-int getBad(pitem t, int key) {
-    if (!t) return 0;
-    pitem nt = Down(t);
-    if (key <= nt->value)
-        return getBad(nt->l, key);
-    return 1 + cnt(nt->l) + getBad(nt->r, key);
-}
-
-bool Check(int x, int k, const vector<int>& a,
-    const vector<pitem>& ltreap, const vector<pitem>& rtreap) {
-    for (int i = 0; i < a.size(); i++)
-        if (a[i] >= x && getBad(ltreap[i], x) + getBad(rtreap[i], x) <= k)
-            return true;
+bool Check(int x, int k, const vector<int>& a) {
+    vector need(a.size(), 0);
+    all = {item(0)};
+    int treap = 0;
+    bool was = false;
+    for (int i = 0; i < a.size(); i++) {
+        processTreap(treap, x, a[i]);
+        if (a[i] >= x) {
+            need[i] += getBad(treap, x);
+            if (need[i] <= k) was = true;
+        }
+    }
+    if (!was)
+        return false;
+    all = {item(0)};
+    treap = 0;
+    for (int i = a.size() - 1; i >= 0; i--) {
+        processTreap(treap, x, a[i]);
+        if (a[i] >= x) {
+            need[i] += getBad(treap, x);
+            if (need[i] <= k)
+                return true;
+        }
+    }
     return false;
 }
 
@@ -103,29 +121,10 @@ int main()
         vector<int> a(n);
         for (auto& x : a)
             cin >> x;
-        vector<pitem> ltreap(n, nullptr), rtreap(n, nullptr);
-        pitem treap = nullptr;
-        for (int i = 0; i < n; i++) {
-            pitem lef, rig;
-            split(treap, lef, rig, a[i]);
-            lef = downOn(lef, 1);
-            ltreap[i] = Merge(lef, new item(a[i]));
-            ltreap[i] = Merge(ltreap[i], rig);
-            treap = ltreap[i];
-        }
-        treap = nullptr;
-        for (int i = n - 1; i >= 0; i--) {
-            pitem lef, rig;
-            split(treap, lef, rig, a[i]);
-            lef = downOn(lef, 1);
-            rtreap[i] = Merge(lef, new item(a[i]));
-            rtreap[i] = Merge(rtreap[i], rig);
-            treap = rtreap[i];
-        }
         int lef = 1, rig = 1000000000;
         while (lef <= rig) {
             int mid = lef + rig >> 1;
-            if (Check(mid, k, a, ltreap, rtreap))
+            if (Check(mid, k, a))
                 lef = mid + 1;
             else rig = mid - 1;
         }
