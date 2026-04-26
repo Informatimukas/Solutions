@@ -50,13 +50,17 @@ int main()
             auto it1 = p[i].M.end();
             while (it1 != p[i].M.begin()) {
                 --it1;
-                auto it2 = next(it1);
-                while (it2 != p[i].M.end()) {
+                auto it2 = p[i].M.end();
+                while (it2 != p[i].M.begin()) {
+                    --it2;
+                    if (it1->first == it2->first)
+                        break;
                     auto cand = __gcd(it1->first, it2->first);
                     if (cand > 1) {
                         Add(p[i], cand, it2->second);
+                        Add(p[i], it2->first / cand, it2->second);
                         p[i].M.erase(it2++);
-                    } else ++it2;
+                    }
                 }
             }
         }
