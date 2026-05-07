@@ -14,28 +14,42 @@ int main()
         cin >> r >> g >> b;
         vector<ic> seq = {{r, 'R'}, {g, 'G'}, {b, 'B'}};
         ranges::sort(seq);
-        string s;
-        while (seq[2].first > 0 && seq[0].first > 0)
-        while (seq[0].first > 0) {
-            s += string(1, seq[2].second) + string(1, seq[0].second);
-            seq[0].first--;
-            seq[2].first--;
-            if (seq[1].first > seq[2].first)
-                swap(seq[1], seq[2]);
-        }
-        if (s.length() >= 2 && s[s.length() - 2] == seq[2].second)
-            swap(seq[1], seq[2]);
-        while (seq[1].first > 0 && seq[2].first > 0) {
-            s += string(1, seq[1].second) + string(1, seq[2].second);
-            seq[1].first--;
+        int sum = accumulate(seq.begin(), seq.end(), 0, [](auto&& a, auto&& b) {
+            return a + b.first;
+        });
+        int p = min(sum / 2, sum - seq[2].first);
+        string res;
+        array<array<int, 3>, 3> cnt{};
+        if (sum > 2 * p) {
+            res += seq[2].second;
             seq[2].first--;
         }
-        if (seq[1].first > seq[2].first)
-            swap(seq[1], seq[2]);
-        if (s.length() < 1 || s.length() < 3 && s[s.length() - 1] != seq[2].second ||
-            s[s.length() - 1] != seq[2].second && s[s.length() - 3] != seq[2].second)
-            s += seq[2].second;
-        cout << s << "\n";
+        for (int i = 0; i < p; i++) {
+            auto ind = distance(seq.begin(),
+                ranges::min_element(seq, {}, [](auto&& a) {
+                return a.first;
+            }));
+            vector<int> rem;
+            for (int j = 0; j < seq.size(); j++)
+                if (j != ind)
+                    rem.push_back(j);
+            seq[rem[0]].first--;
+            seq[rem[1]].first--;
+            cnt[rem[0]][rem[1]]++;
+        }
+        while (cnt[0][2]--) {
+            res += seq[0].second;
+            res += seq[2].second;
+        }
+        while (cnt[1][2]--) {
+            res += seq[1].second;
+            res += seq[2].second;
+        }
+        while (cnt[0][1]--) {
+            res += seq[1].second;
+            res += seq[0].second;
+        }
+        cout << res << "\n";
     }
     return 0;
 }
