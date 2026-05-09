@@ -7,35 +7,42 @@ constexpr ll mod = 1000000007;
 
 ll Solve(const vector<int>& a) {
     set forb(a.begin(), a.end());
-    int cur = a.size();
-    int pnt = cur;
-    ll res = 1;
-    set<int> rem, fre;
-    for (int i = 0; i <= a.size(); i++) {
-        rem.insert(i);
+    deque<int> D;
+    for (int i = 0; i <= a.size(); i++)
         if (!forb.contains(i))
-            fre.insert(i);
-    }
+            D.push_back(i);
+    ll res = 1;
+    int cnt = 0;
+    for (int i = a.size() - 1; i >= 0; i--)
+        if (i == 0 && a[0] == a.size() || i > 0 && a[i] == a[i - 1]) {
+            while (!D.empty() && D.front() < a[i]) {
+                cnt++;
+                D.pop_front();
+            }
+            res = res * cnt % mod;
+            cnt--;
+        } else if (i == 0 && a[0] > a.size() || i > 0 && a[i] > a[i - 1])
+            return 0;
+    if (res == 0)
+        return res;
+    for (int i = 0; i <= a.size(); i++)
+        if (!forb.contains(i))
+            D.push_back(i);
+    set<int> allowed;
     for (int i = 0; i < a.size(); i++) {
-        if (a[i] > cur)
-            return 0;
-        if (a[i] == cur) {
-            while (pnt >= 0 && forb.contains(pnt))
-                pnt--;
-            if (pnt < 0)
-                return 0;
-            res = res * static_cast<ll>(fre.size()) % mod;
-            fre.erase(pnt);
-            rem.erase(pnt--);
-            continue;
+        while (!D.empty() && D.back() >= a[i]) {
+            allowed.insert(D.back());
+            D.pop_back();
         }
-        rem.erase(cur);
-        fre.erase(cur);
-        res = res * static_cast<ll>(a.size() - fre.size()) % mod;
-        cur = a[i];
-        if (rem.empty() || *rem.rbegin() != a[i])
-            return 0;
-        pnt = min(pnt, a[i]);
+        if (i == 0 && a[0] == a.size() || i > 0 && a[i] == a[i - 1]) {
+            allowed.insert(D.back());
+            D.pop_back();
+        } else {
+            if (i > 0)
+                allowed.insert(a[i - 1]);
+            else allowed.insert(a.size());
+            res = res * static_cast<ll>(allowed.size()) % mod;
+        }
     }
     return res;
 }
