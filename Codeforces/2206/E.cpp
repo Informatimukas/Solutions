@@ -1,17 +1,33 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-constexpr int Maxk = 20;
-constexpr int Inf = 1000000007;
+using ll = long long;
+using ii = pair<int, int>;
+using lli = pair<ll, int>;
 
-int getMax(const vector<vector<int>>& mx, int lef, int rig) {
-    int res = -Inf;
-    for (int i = Maxk - 1; i >= 0; i--)
-        if (lef + (1 << i) <= rig + 1) {
-            res = max(res, mx[lef][i]);
-            lef += 1 << i;
-        }
+struct pos {
+    deque<lli> seq;
+    ll zer{0};
+};
+
+void addBIT(vector<ll>& BIT, int x, ll val) {
+    for (int i = x; i < BIT.size(); i += i & -i)
+        BIT[i] += val;
+}
+
+ll getBIT(const vector<ll>& BIT, int x) {
+    ll res = 0;
+    for (int i = x; i > 0; i -= i & -i)
+        res += BIT[i];
     return res;
+}
+
+void Update(int ind, int m, ll delt, vector<ll>& BIT, vector<pos>& my) {
+    int myind = ind % m;
+    auto& p = my[myind];
+    if (delt >= 0) {
+        addBIT(BIT, )
+    }
 }
 
 int main()
@@ -21,28 +37,22 @@ int main()
     int n, m;
     cin >> n >> m;
     int z = n - m + 1;
-    vector mx(z, vector<int>(Maxk));
-    for (int i = 0; i < z; i++)
-        cin >> mx[i][0];
-    for (int j = 1; j < Maxk; j++)
-        for (int i = 0; i + (1 << j) <= z; i++)
-            mx[i][j] = max(mx[i][j - 1], mx[i + (1 << j - 1)][j - 1]);
+    vector<int> a(z);
+    for (auto& x : a)
+        cin >> x;
+    vector<vector<ii>> quer(n + 1);
     int q;
     cin >> q;
-    while (q--) {
+    vector<ll> res(q);
+    for (int i = 0; i < q; i++) {
         int lef, rig;
         cin >> lef >> rig;
-        lef--;
-        rig--;
-        if (rig - lef + 1 < m) {
-            cout << "unbounded\n";
-            continue;
-        }
-        int got = getMax(mx, lef, rig - (m - 1));
-        int res = got / m;
-        if (got > 0 && res * m < got)
-            res++;
-        cout << res << "\n";
+        quer[lef].emplace_back(rig, i);
+    }
+    vector BIT(n + 1, 0ll);
+    vector<pos> my(m);
+    for (int i = n; i > 0; i--) {
+
     }
     return 0;
 }
