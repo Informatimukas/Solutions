@@ -1,3 +1,5 @@
+// Next steps: joining pairs at lcas is incorrect as two nodes might connect to their
+// ancestor instead. Might be worth computing the answer over pairs directly.
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -9,10 +11,17 @@ struct pos {
     ll ways{0}, sum{0};
 };
 
-pos Join(const pos& a, const pos& b, ll lvl) {
+pos Move(const pos& a, ll lvl) {
+    pos res;
+    res.ways = a.ways;
+    res.sum = (a.sum + a.ways * lvl) % mod;
+    return res;
+}
+
+pos Join(const pos& a, const pos& b) {
     pos res;
     res.ways = a.ways * b.ways % mod;
-    res.sum = (a.ways * b.sum + a.sum * b.ways + a.ways * b.ways % mod * 2ll * lvl) % mod;
+    res.sum = (a.ways * b.sum + a.sum * b.ways) % mod;
     return res;
 }
 
@@ -30,13 +39,15 @@ vector<pos> Solve(int v, int p, const vector<vector<int>>& neigh) {
         auto got = Solve(u, v, neigh);
         pos tail;
         for (int i = lvl - 1; i >= 0; i--) {
-            tail.sum = (tail.sum + tail.ways) % mod;
+            tail = Move(tail, 1);
             pos ntail = Add(tail, got[i]);
-            dp[i][1] = Join(dp[i][1], ntail, i);
-            dp[i][1] = Add(dp[i][1], Join(dp[i][0], got[i], i));
+            cout << "v = " << v << ", u = " << u << ", i = " << i << endl;
+            cout << " ntail = " << ntail.ways << " " << ntail.sum << endl;
+            dp[i][1] = Add(dp[i][1], Join(dp[i][1], Move(ntail, 2 * i)));
+            dp[i][1] = Add(dp[i][1], Join(dp[i][0], got[i]));
             dp[i][1] = Add(dp[i][1], got[i]);
-            dp[i][0] = Join(dp[i][0], tail, i);
-            dp[i][0] = Add(dp[i][0], tail);
+            dp[i][0] = Add(dp[i][0], Join(dp[i][0], Move(tail, 2 * i)));
+            dp[i][0] = Add(dp[i][0], Move(tail, 2 * i));
             tail = ntail;
         }
     }
