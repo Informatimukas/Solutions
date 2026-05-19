@@ -5,20 +5,46 @@ bool Match(char a, char b) {
     return a == '-' || b == '-' || a == b;
 }
 
-vector<int> prefix_function(string_view s) {
-    int n = (int) s.length();
-    vector<int> pi (n);
-    for (int i=1; i<n; ++i) {
-        int j = pi[i-1];
-        while (j > 0 && !Match(s[i], s[j]))
-            j = pi[j-1];
-        if (Match(s[i], s[j]))  ++j;
-        pi[i] = j;
+char getCharacter(string_view a, string_view b, int index) {
+    if (index < a.length())
+        return a[index];
+    return b[index - a.length()];
+}
+
+bool realCheck(string_view a, string_view b) {
+    for (int i = 0; i < a.length(); i++)
+        if (!Match(a[i], b[i]))
+            return false;
+    return true;
+}
+
+bool canMatch(string_view a, string_view& b) {
+    vector<int> Z(a.length());
+    int l = -1, r = -1;
+    for (int i = 1; i < a.length() + b.length(); i++) {
+        if (i >= Z.size())
+            Z.push_back(0);
+        if (i <= r)
+            Z[i] = min(r - i, Z[i - l]);
+        while (i + Z[i] < a.length() + b.length() && Z[i] < a.length() &&
+            Match(getCharacter(a, b, Z[i]), getCharacter(a, b, i + Z[i])))
+            Z[i]++;
+        if (i >= a.length() && Z[i] >= a.length() &&
+            realCheck(a, b.substr(i - a.length(), a.length()))) {
+            b.remove_prefix(i);
+            return true;
+        }
+        if (i + Z[i] - 1 > r) {
+            l = i;
+            r = i + Z[i] - 1;
+        }
     }
-    return pi;
+    return false;
 }
 
 bool easySolve(string_view a, string_view b) {
+    if (b[0] != '*' || b[b.length() - 1] != '*')
+        return false;
     vector<string_view> seq;
     int lst = 0;
     for (int i = 1; i < b.length(); i++)
@@ -27,24 +53,10 @@ bool easySolve(string_view a, string_view b) {
                 seq.push_back(b.substr(lst + 1, i - lst - 1));
             lst = i;
         }
-    int done = 0;
-    if (done >= seq.size())
-        return true;
-    auto pi = prefix_function(seq[0]);
-    int cur = 0;
-    for (auto ch : a) {
-        while (cur > 0 && !Match(ch, seq[done][cur]))
-            cur = pi[cur - 1];
-        if (Match(ch, seq[done][cur]))
-            cur++;
-        if (cur >= seq[done].size()) {
-            if (++done >= seq.size())
-                return true;
-            pi = prefix_function(seq[done]);
-            cur = 0;
-        }
-    }
-    return false;
+    for (auto x : seq)
+        if (!canMatch(x, a))
+            return false;
+    return true;
 }
 
 bool Solve(string_view a, string_view b) {
