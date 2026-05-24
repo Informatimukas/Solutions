@@ -5,18 +5,47 @@ using ll = long long;
 
 constexpr int Maxn = 18;
 
-void Solve(int lvl, int n, int r, int mask1, int mask2, int mask3, int st1, int st2, int st3,
-    vector<vector<ll>>& dp, const vector<ll>& sum) {
-    if (st1 > 0 || st2 > 0 || st3 > 0)
+struct State {
+    int lvl, n, r, mask1, mask2, st1, st2, st3;
+    vector<vector<ll>> dp;
+    vector<ll> sum;
+};
+
+State S;
+
+void Solve() {
+    if (S.st1 > 0 || S.st2 > 0 || S.st3 > 0)
         return;
-    if (lvl >= n) {
-        dp[r][mask1] = max(dp[r][mask1], min(sum[mask2], dp[r - 1][mask3]));
+    if (S.lvl >= S.n) {
+        S.dp[S.r][S.mask1] = max(S.dp[S.r][S.mask1], min(S.sum[S.mask2],
+            S.dp[S.r - 1][S.mask1 ^ S.mask2]));
         return;
     }
-    Solve(lvl + 1, n, r, mask1, mask2, mask3, st1, st2, st3 + 1, dp, sum);
-    if (mask2)
-        Solve(lvl + 1, n, r, mask1 | 1 << lvl, mask2, mask3 | 1 << lvl, st1 + 1, st2, st3, dp, sum);
-    Solve(lvl + 1, n, r, mask1 | 1 << lvl, mask2 | 1 << lvl, mask3, st1 + 1, st2 + 1, st3, dp, sum);
+    ++S.lvl;
+    ++S.st3;
+    Solve();
+    --S.st3;
+    --S.lvl;
+    if (S.mask2) {
+        S.mask1 ^= 1 << S.lvl;
+        ++S.st1;
+        ++S.lvl;
+        Solve();
+        --S.lvl;
+        --S.st1;
+        S.mask1 ^= 1 << S.lvl;
+    }
+    S.mask1 ^= 1 << S.lvl;
+    S.mask2 ^= 1 << S.lvl;
+    ++S.st1;
+    ++S.st2;
+    ++S.lvl;
+    Solve();
+    --S.lvl;
+    --S.st2;
+    --S.st1;
+    S.mask2 ^= 1 << S.lvl;
+    S.mask1 ^= 1 << S.lvl;
 }
 
 int main() {
@@ -45,19 +74,27 @@ int main() {
         }
         int mx = (k + 1) / 2;
         n--;
-        vector dp(mx + 1, vector(1 << n, 0ll));
-        vector sum(1 << n, 0ll);
+        S.dp = vector(mx + 1, vector(1 << n, 0ll));
+        S.sum = vector(1 << n, 0ll);
         for (int i = 1; i < 1 << n; i++) {
             int j = __builtin_popcount((i & -i) - 1);
-            sum[i] = sum[i ^ (1 << j)] + a[j];
-            dp[1][i] = sum[i];
+            S.sum[i] = S.sum[i ^ (1 << j)] + a[j];
+            S.dp[1][i] = S.sum[i];
         }
-        for (int i = 2; i <= mx; i++)
-            Solve(0, n, i, 0, 0, 0, k - i - n, i - 1 - n, i - n, dp, sum);
+        S.n = n;
+        for (int i = 2; i <= mx; i++) {
+            S.lvl = 0;
+            S.r = i;
+            S.mask1 = S.mask2 = 0;
+            S.st1 = k - i - n;
+            S.st2 = i - 1 - n;
+            S.st3 = i - n;
+            Solve();
+        }
         ll res = 0;
         int all = (1 << n) - 1;
         for (int j = 0; j < 1 << n; j++)
-            res = max(res, min(dp[mx][j], dp[k - mx][all ^ j]));
+            res = max(res, min(S.dp[mx][j], S.dp[k - mx][all ^ j]));
         res += a[n];
         cout << res << "\n";
     }
