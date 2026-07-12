@@ -47,8 +47,6 @@ ll Solve(ll val, const vector<ll>& a, int k) {
     ll sum = 0;
     ll res = val == 0;
     for (int i = a.size() - 1; i >= 0; i--) {
-       /* if (k == 0)
-            break;*/
         ll sam = (val & a[i]);
         if (sam == val) {
             k--;
@@ -62,9 +60,9 @@ ll Solve(ll val, const vector<ll>& a, int k) {
             k++;
             continue;
         }
+        k--;
         if (comp)
             sum = (sum - C(i, k) + mod) * inv2 % mod;
-        k--;
         val ^= sam;
     }
     return res;
