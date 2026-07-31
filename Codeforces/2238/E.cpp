@@ -1,19 +1,34 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+constexpr int Inf = 1000000000;
+
 int Solve(const string& s) {
-    vector<int> sum(s.length());
-    int res = 1000000000, best = 1;
-    for (int i = 0; i < s.length(); i++) {
-        sum[i] = s[i] == 'T';
-        if (i > 0)
-            sum[i] += sum[i - 1];
-        int cand = 2 * sum[i] - i;
-        best = max(best, cand);
-        res = min(res, cand - best);
+    int n = s.length();
+    vector dp(n + 1, vector(n + 1, Inf));
+    vector<int> tr(n + 1);
+    tr[n] = 0;
+    for (int i = n - 1; i >= 0; i--)
+        tr[i] = tr[i + 1] + (s[i] == 'T');
+    for (int j = 0; j <= n; j++)
+        for (int l = 0; l <= n; l++) {
+            dp[j][l] = n - (j + tr[n]) + 2 * j - n - l;
+            cout << "dp[" << n << "][" << j << "][" << l << "] = " << dp[j][l] << endl;
+        }
+    for (int i = n - 1; i >= 0; i--) {
+        vector ndp(i + 1, vector(i + 1, 0));
+        for (int j = 0; j <= i; j++)
+            for (int l = 0; l <= i; l++) {
+                int cur = n - (j + tr[i]) + (2 * j - i) - l;
+                if (s[i] == 'F' || s[i] == 'N')
+                    ndp[j][l] = max(ndp[j][l], min(cur, dp[j][max(l, 2 * j - (i + 1))]));
+                if (s[i] == 'T' || s[i] == 'N')
+                    ndp[j][l] = max(ndp[j][l], min(cur, dp[j + 1][max(l, 2 * (j + 1) - (i + 1))]));
+                cout << "ndp[" << i << ", " << j << ", " << l << "] = " << ndp[j][l] << endl;
+            }
+        dp = ndp;
     }
-    res += sum.size() - sum.back();
-    return res;
+    return dp[0][0];
 }
 
 int main()
@@ -27,22 +42,7 @@ int main()
         cin >> n;
         string s;
         cin >> s;
-        vector<int> seq;
-        for (int i = 0; i < n; i++)
-            if (s[i] == 'N')
-                seq.push_back(i);
-        int res = 0;
-        for (int i = 0; i <= seq.size(); i++)
-            for (int j = i; j <= seq.size(); j++) {
-                for (int k = 0; k < i; k++)
-                    s[seq[k]] = 'F';
-                for (int k = i; k < j; k++)
-                    s[seq[k]] = 'T';
-                for (int k = j; k < seq.size(); k++)
-                    s[seq[k]] = 'F';
-                res = max(res, Solve(s));
-            }
-        cout << res << "\n";
+        cout << Solve(s) << "\n";
     }
     return 0;
 }
