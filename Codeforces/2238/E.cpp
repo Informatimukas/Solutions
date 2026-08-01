@@ -12,18 +12,24 @@ int Solve(const string& s) {
         tr[i] = tr[i + 1] + (s[i] == 'T');
     for (int j = 0; j <= n; j++)
         for (int l = 0; l <= n; l++) {
-            dp[j][l] = n - (j + tr[n]) + 2 * j - n - l;
+            dp[j][l] = n - j + 2 * j - n - l;
             cout << "dp[" << n << "][" << j << "][" << l << "] = " << dp[j][l] << endl;
         }
     for (int i = n - 1; i >= 0; i--) {
         vector ndp(i + 1, vector(i + 1, 0));
         for (int j = 0; j <= i; j++)
             for (int l = 0; l <= i; l++) {
-                int cur = n - (j + tr[i]) + (2 * j - i) - l;
                 if (s[i] == 'F' || s[i] == 'N')
-                    ndp[j][l] = max(ndp[j][l], min(cur, dp[j][max(l, 2 * j - (i + 1))]));
+                    ndp[j][l] = max(ndp[j][l], min(n - (j + tr[i + 1]) + (2 * j - i) - l,
+                        dp[j][max(l, 2 * j - (i + 1))]));
                 if (s[i] == 'T' || s[i] == 'N')
-                    ndp[j][l] = max(ndp[j][l], min(cur, dp[j + 1][max(l, 2 * (j + 1) - (i + 1))]));
+                    ndp[j][l] = max(ndp[j][l], min(n - (j + 1 + tr[i + 1]) + (2 * j - i) - l,
+                        dp[j + 1][max(l, 2 * (j + 1) - (i + 1))]));
+                if (i == 3 && j == 0 && l == 0) {
+                    cout << n << " " << j + tr[i] << " " << 2 * j - i << " " << l << endl;
+                }
+                ndp[j][l] = min(ndp[j][l], (n - (j + tr[i]) + (2 * j - i) - l));
+                if (ndp[j][l] >= 4)
                 cout << "ndp[" << i << ", " << j << ", " << l << "] = " << ndp[j][l] << endl;
             }
         dp = ndp;
