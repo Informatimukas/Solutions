@@ -4,28 +4,33 @@ using namespace std;
 constexpr int Inf = 1000000000;
 
 struct node {
-    int col;
     vector<int> neigh;
+    bool has{false};
+    int col{-1}, d;
 };
 
-void addBest(array<int, 2>& best, int val) {
-    if (val < best[0])
-        best[1] = best[0], best[0] = val;
-    else if (val < best[1])
-        best[1] = val;
-}
-
-int Solve(int v, int p, const vector<node>& nodes, int x, int& res) {
-    array best{Inf, Inf};
-    if (nodes[v].col <= x)
-        addBest(best, 0);
-    for (auto u : nodes[v].neigh) {
-        if (u == p)
-            continue;
-        addBest(best, Solve(u, v, nodes, x, res) + 1);
+int getDist(int root, vector<node>& nodes) {
+    int v = root;
+    nodes[v].col = v;
+    nodes[v].d = 0;
+    queue<int> Q;
+    Q.push(v);
+    while (!Q.empty()) {
+        v = Q.front();
+        Q.pop();
+        for (auto u : nodes[v].neigh) {
+            if (nodes[u].col != root) {
+                nodes[u].col = root;
+                if (nodes[u].has) {
+                    nodes[root].has = true;
+                    return nodes[v].d + 1;
+                }
+                nodes[u].d = nodes[v].d + 1;
+                Q.push(u);
+            }
+        }
     }
-    res = min(res, best[0] + best[1]);
-    return best[0];
+
 }
 
 int main()
@@ -40,37 +45,21 @@ int main()
         vector<node> nodes(n + 1);
         int c0;
         cin >> c0;
-        nodes[c0].col = 0;
-        for (int i = 1; i < n; i++) {
-            int a;
-            cin >> a;
-            nodes[a].col = i;
-        }
-        for (int i = 0; i < n - 1; i++) {
-            int a, b;
-            cin >> a >> b;
-            nodes[a].neigh.push_back(b);
-            nodes[b].neigh.push_back(a);
-        }
-        vector<int> res(n);
-        int cur = 0;
-        while (cur < n) {
-            int got = Inf;
-            Solve(1, 0, nodes, cur, got);
-            int lef = cur + 1, rig = n - 1;
-            while (lef <= rig) {
-                int mid = (lef + rig) / 2;
-                int ch = Inf;
-                Solve(1, 0, nodes, mid, ch);
-                if (ch == got)
-                    lef = mid + 1;
-                else rig = mid - 1;
-            }
-            while (cur < lef)
-                res[cur++] = got;
-        }
+        nodes[c0].has = true;
+        int res = Inf;
+        vector<int> a(n);
         for (int i = 1; i < n; i++)
-            cout << res[i] << (i + 1 < n ? ' ' : '\n');
+            cin >> a[i];
+        for (int i = 0; i < n - 1; i++) {
+            int u, v;
+            cin >> u >> v;
+            nodes[u].neigh.push_back(v);
+            nodes[v].neigh.push_back(u);
+        }
+        for (int i = 1; i < n; i++) {
+            res = min(res, getDist(a[i], nodes));
+            cout << res << (i + 1 < n ? ' ' : '\n');
+        }
     }
     return 0;
 }
