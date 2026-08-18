@@ -1,7 +1,10 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-constexpr int Maxn = 200005;
+using ii = pair<int, int>;
+
+constexpr int Inf = 2000000000;
+constexpr int Maxn = 400005;
 
 struct custom_hash {
     static uint64_t splitmix64(uint64_t x) {
@@ -18,14 +21,14 @@ struct custom_hash {
     }
 };
 
-int main()
-{
+int main() {
     ios_base::sync_with_stdio(false);
     cin.tie(nullptr);
     vector<vector<int>> divs(Maxn);
     for (int i = 2; i < Maxn; i++)
-        for (int j = i; j < Maxn; j += i)
-            divs[j].push_back(i);
+        if (divs[i].empty())
+            for (int j = i; j < Maxn; j += i)
+                divs[j].push_back(i);
     int T;
     cin >> T;
     while (T--) {
@@ -51,17 +54,37 @@ int main()
             cout << "0\n";
             continue;
         }
-        int best = 2000000007;
+        vector<int> tmp = b;
+        ranges::sort(tmp);
+        int best = tmp[0] + tmp[1];
         for (int i = 0; i < n; i++) {
             int x = a[i];
-            for (auto y : divs[x + 1])
-                if (cnt[y] > 0) {
-                    best = min(best, b[i]);
+            for (int j = x + 1; j <= x + 1; j++) {
+                bool found = false;
+                for (auto d : divs[j])
+                    if (cnt[d] > 0) {
+                        found = true;
+                        break;
+                    }
+                if (found) {
+                    best = min(best, (j - x) * b[i]);
                     break;
                 }
+            }
         }
-        ranges::sort(b);
-        best = min(best, b[0] + b[1]);
+        ii mn = {Inf, Inf};
+        for (int i = 0; i < n; i++)
+            mn = min(mn, {b[i], i});
+        int root = a[mn.second];
+        for (int i = 0; i < n; i++)
+            if (i != mn.second) {
+                int x = a[i];
+                for (auto d : divs[x]) {
+                    int tk = (root - 1) / d * d + d - a[mn.second];
+                    if (tk <= best / b[mn.second])
+                        best = min(best, tk * b[mn.second]);
+                }
+            }
         cout << best << "\n";
     }
     return 0;
