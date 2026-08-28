@@ -1,18 +1,35 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-using ii = pair<int, int>;
-using iii = pair<int, ii>;
+using ll = long long;
 
-constexpr int Inf = 2000000000;
+struct node {
+    ll sum{0};
+    ll cnt{0};
+};
 
-int Count(const vector<iii>& best, set<int> spec, int rem) {
-    for (int i = 0; i < best.size() && best[i].first <= rem; i++)
-        if (!spec.contains(best[i].second.first)) {
-            rem -= best[i].first;
-            spec.insert(best[i].second.first);
-        }
-    return spec.size();
+ll Get(const vector<node>& st, int v, int l, int r, ll k) {
+    if (st[v].cnt == 0)
+        return 0;
+    if (l == r) {
+        ll one = st[v].sum / st[v].cnt;
+        return min(st[v].cnt, k / one);
+    }
+    int m = (l + r) / 2;
+    if (k <= st[2 * v].sum)
+        return Get(st, 2 * v, l, m, k);
+    return Get(st, 2 * v + 1, m + 1, r, k - st[2 * v].sum) + st[2 * v].cnt;
+}
+
+void Update(vector<node>& st, int v, int l, int r, int x, ll add) {
+    st[v].cnt++;
+    st[v].sum += add;
+    if (l == r)
+        return;
+    int m = (l + r) / 2;
+    if (x <= m)
+        Update(st, 2 * v, l, m, x, add);
+    else Update(st, 2 * v + 1, m + 1, r, x, add);
 }
 
 int main()
@@ -25,50 +42,23 @@ int main()
         int n, c;
         cin >> n >> c;
         vector<int> a(n + 1);
-        vector<iii> best;
+        vector<int> un;
         for (int i = 1; i <= n; i++) {
             cin >> a[i];
-            best.push_back({a[i] + i, {i, 0}});
-            best.push_back({n + 1 - i + a[i], {i, 1}});
+            int best = min(a[i] + i, n + 1 - i + a[i]);
+            un.push_back(best);
         }
-        ranges::sort(best);
-        set<int> spec;
-        int rem = c;
-        bool was = false;
-        for (int i = 0; i < best.size() && best[i].first <= rem; i++)
-            if (!spec.contains(best[i].second.first)) {
-                rem -= best[i].first;
-                spec.insert(best[i].second.first);
-                if (best[i].second.second == 0)
-                    was = true;
-            }
-        if (was) {
-            cout << spec.size() << "\n";
-            continue;
+        ranges::sort(un);
+        un.erase(ranges::unique(un).begin(), un.end());
+        vector<node> st(4 * un.size() + 5);
+        ll res = 0;
+        for (int i = n; i >= 1; i--) {
+            ll cand = a[i] + i;
+            if (cand <= c)
+                res = max(res, 1 + Get(st, 1, 0, un.size() - 1, c - cand));
+            int ind = distance(un.begin(), ranges::lower_bound(un, min(a[i] + i, n + 1 - i + a[i])));
+            Update(st, 1, 0, un.size() - 1, ind, un[ind]);
         }
-        int def = Inf;
-        int wth;
-        for (auto x : spec) {
-            int cand = x - (n + 1 - x);
-            if (x + a[x] <= c && cand < def) {
-                def = cand;
-                wth = x;
-            }
-        }
-        int res = 0;
-        if (def < Inf)
-            res = max(res, Count(best, {wth}, c - a[wth] - wth));
-        def = Inf;
-        for (int i = 1; i <= n; i++)
-            if (!spec.contains(i)) {
-                int cand = i + a[i];
-                if (cand < def) {
-                    def = cand;
-                    wth = i;
-                }
-            }
-        if (def < Inf && def <= c)
-            res = max(res, Count(best, {wth}, c - a[wth] - wth));
         cout << res << "\n";
     }
     return 0;
