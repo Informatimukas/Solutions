@@ -3,22 +3,27 @@ using namespace std;
 
 using ll = long long;
 
-constexpr int Maxb = 30;
+ll Solve(int key, int a, int d, int g, ll x) {
+    a |= key;
+    a %= d;
+    if (a % g)
+        return -1;
+    ll nd = (d - a) % d;
+    nd = nd * x % d;
+    return nd << 30 | key;
+}
 
-struct custom_hash {
-    static uint64_t splitmix64(uint64_t x) {
-        // http://xorshift.di.unimi.it/splitmix64.c
-        x += 0x9e3779b97f4a7c15;
-        x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9;
-        x = (x ^ (x >> 27)) * 0x94d049bb133111eb;
-        return x ^ (x >> 31);
+void gcd(ll a, ll& x, ll b, ll& y) {
+    if (a == 0) {
+        x = 0;
+        y = 1;
+        return;
     }
-
-    size_t operator()(uint64_t x) const {
-        static const uint64_t FIXED_RANDOM = chrono::steady_clock::now().time_since_epoch().count();
-        return splitmix64(x + FIXED_RANDOM);
-    }
-};
+    ll xx, yy;
+    gcd(b % a, xx, a, yy);
+    x = yy - b / a * xx;
+    y = xx;
+}
 
 int main()
 {
@@ -29,27 +34,34 @@ int main()
     while (T--) {
         int a, b, d;
         cin >> a >> b >> d;
-        unordered_map<long long, int, custom_hash> safe_map;
-        for (int i = 0; i < 1 << 15; i++) {
-            ll wra = (((a >> 15) | i) << 15) % d;
-            ll wrb = (((b >> 15) | i) << 15) % d;
-            safe_map.emplace(wra << 30 | wrb, i);
-        }
-        bool ok = false;
-        ll all = (1 << 15) - 1;
-        ll x;
-        for (int i = 0; i < 1 << 15; i++) {
-            ll wra = ((a & all) | i) % d;
-            ll wrb = ((b & all) | i) % d;
-            wra = (d - wra) % d;
-            wrb = (d - wrb) % d;
-            if (safe_map.contains(wra << 30 | wrb)) {
-                ok = true;
-                x = i | safe_map[wra << 30 | wrb] << 15;
+        int oth = 1 << 30;
+        int g = gcd(1 << 30, d);
+        int noth = oth / g, nd = d / g;
+        ll x, y;
+        gcd(noth, x, nd, y);
+        x %= nd;
+        if (x < 0)
+            x += nd;
+        cout << "g = " << g << ", x = " << x << endl;
+        bool bad = false;
+        for (int i = 0; 1 << i < g; i++) {
+            if ((a & 1 << i) || (b & 1 << i)) {
+                bad = true;
                 break;
             }
         }
-        cout << (ok ? x : -1) << "\n";
+        if (bad) {
+            cout << "-1\n";
+            continue;
+        }
+        int key = 0;
+        cout << "from = " << __builtin_popcount(g - 1) << endl;
+        for (int i = __builtin_popcount(g - 1); i < 30; i++)
+            key |= 1 << i;
+        ll res = Solve(key, a, d, g, x);
+        ll ta = (res | a) % d, tb = (res | b) % d;
+        cout << res << "\n";
+        cout << " " << ta << " " << tb << endl;
     }
     return 0;
 }
