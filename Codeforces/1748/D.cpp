@@ -8,6 +8,8 @@ ll Solve(int key, int a, int d, int g, ll x) {
     a %= d;
     if (a % g)
         return -1;
+    a /= g;
+    d /= g;
     ll nd = (d - a) % d;
     nd = nd * x % d;
     return nd << 30 | key;
@@ -42,7 +44,6 @@ int main()
         x %= nd;
         if (x < 0)
             x += nd;
-        cout << "g = " << g << ", x = " << x << endl;
         bool bad = false;
         for (int i = 0; 1 << i < g; i++) {
             if ((a & 1 << i) || (b & 1 << i)) {
@@ -55,13 +56,11 @@ int main()
             continue;
         }
         int key = 0;
-        cout << "from = " << __builtin_popcount(g - 1) << endl;
         for (int i = __builtin_popcount(g - 1); i < 30; i++)
             key |= 1 << i;
         ll res = Solve(key, a, d, g, x);
         ll ta = (res | a) % d, tb = (res | b) % d;
         cout << res << "\n";
-        cout << " " << ta << " " << tb << endl;
     }
     return 0;
 }
