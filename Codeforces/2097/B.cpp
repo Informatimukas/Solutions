@@ -1,79 +1,42 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-using ii = pair<int, int>;
 using ll = long long;
+using ii = pair<int, int>;
 
-constexpr int mod = 1000000007;
+constexpr ll mod = 1000000007;
+const vector dx = {-1, 0, 1, 0};
+const vector dy = {0, -1, 0, 1};
 
-struct tree {
-    vector<vector<int>> neigh;
-    vector<int> cnt;
-    map<ii, int> M;
-    int getId(const ii& v) {
-        auto it = M.find(v);
-        if (it != M.end())
-            return it->second;
-        int cur = cnt.size();
-        neigh.push_back({});
-        cnt.push_back(0);
-        M.emplace(v, cur);
-        return cur;
+struct UnionSet {
+    int n;
+    vector<int> siz, par, edges, loop;
+    UnionSet(int n): siz(n, 1), par(n), edges(n), loop(n) {
+        iota(par.begin(), par.end(), 0);
+    }
+    int getPar(int x) { return par[x] == x ? x : par[x] = getPar(par[x]); }
+    void unionSet(int a, int b) {
+        if (a == b) {
+            a = getPar(a);
+            edges[a]++;
+            loop[a] = 1;
+            return;
+        }
+        a = getPar(a), b = getPar(b);
+        edges[a]++;
+        if (a == b)
+            return;
+        if (siz[a] < siz[b])
+            swap(a, b);
+        siz[a] += siz[b];
+        par[b] = a;
+        edges[a] += edges[b];
+        loop[a] |= loop[b];
     }
 };
 
-array<int, 2> Solve(tree& t, int v, int p) {
-    array<int, 2> dp{};
-    dp[0] = 1;
-    for (auto& u : t.neigh[v]) {
-        if (u == p) continue;
-        auto got = Solve(t, u, v);
-        dp[1] = static_cast<ll>(dp[1]) * got[0] % mod;
-        dp[1] = (dp[1] + static_cast<ll>(dp[0]) * got[1]) % mod;
-        dp[0] = static_cast<ll>(dp[0]) * got[0] % mod;
-    }
-    array<int, 2> res{};
-    if (t.cnt[v] == 0)
-        res[0] = dp[0];
-    if (t.cnt[v] == 1)
-        res[1] = dp[0];
-    else if (t.cnt[v] == 0)
-        res[1] = (dp[0] + dp[1]) % mod;
-    cout << "solve " << v << " " << p << ": " << res[0] << " " << res[1] << endl;
-    t.cnt[v] = -1;
-    return res;
-}
-
-int Solve(const vector<ii>& seq) {
-    tree t;
-    for (int i = 0; i + 1 < seq.size(); i++) {
-        if ((seq[i].first + seq[i].second) % 2 != (seq[i + 1].first + seq[i + 1].second) % 2)
-            return 0;
-        int d = abs(seq[i].first - seq[i + 1].first) +
-            abs(seq[i].second - seq[i + 1].second);
-        if (d != 2) return 0;
-        if (seq[i].first == seq[i + 1].first) {
-            int v = t.getId({seq[i].first, (seq[i].second + seq[i + 1].second) / 2});
-            t.cnt[v]++;
-        } else if (seq[i].second == seq[i + 1].second) {
-            int v = t.getId({(seq[i].first + seq[i + 1].first) / 2, seq[i].second});
-            t.cnt[v]++;
-        } else {
-            int u = t.getId({seq[i].first, seq[i + 1].second});
-            int v = t.getId({seq[i + 1].first, seq[i].second});
-            cout << "u = " << u << " v = " << v << endl;
-            t.neigh[u].push_back(v);
-            t.neigh[v].push_back(u);
-        }
-    }
-    cout << "constructed " << t.cnt.size() << endl;
-    int res = 1;
-    for (int i = 0; i < t.cnt.size(); i++)
-        if (t.cnt[i] != -1) {
-            auto got = Solve(t, i, -1);
-            res = static_cast<ll>(res) * got[1] % mod;
-        }
-    return res;
+int getId(int r, int c, int m) {
+    return (r - 1) * m + c - 1;
 }
 
 int main()
@@ -85,10 +48,36 @@ int main()
     while (T--) {
         int n, m, k;
         cin >> n >> m >> k;
+        UnionSet US(n * m);
         vector<ii> seq(k + 1);
         for (auto& [a, b] : seq)
             cin >> a >> b;
-        cout << Solve(seq) << "\n";
+        ll res = 1;
+        for (int i = 0; i < k; i++) {
+            vector<ii> good;
+            for (int d = 0; d < dx.size(); d++) {
+                int na = seq[i].first + dx[d], nb = seq[i].second + dy[d];
+                if (1 <= na && na <= n && 1 <= nb && nb <= m &&
+                    abs(na - seq[i + 1].first) + abs(nb - seq[i + 1].second) == 1)
+                    good.emplace_back(na, nb);
+            }
+            if (good.empty()) {
+                res = 0;
+                break;
+            }
+            if (good.size() == 1)
+                good.push_back(good[0]);
+            US.unionSet(getId(good[0].first, good[0].second, m), getId(good[1].first, good[1].second, m));
+        }
+        for (int i = 0; i < n * m; i++)
+            if (US.getPar(i) == i)
+                if (US.edges[i] == US.siz[i] - 1)
+                    res = res * US.siz[i] % mod;
+                else if (US.edges[i] > US.siz[i])
+                    res = 0;
+                else if (!US.loop[i])
+                    res = res * 2 % mod;
+        cout << res << "\n";
     }
     return 0;
 }
