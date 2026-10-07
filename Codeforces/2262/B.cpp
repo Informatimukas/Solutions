@@ -34,10 +34,8 @@ int main() {
             cin >> p[i];
             inp[p[i]] = i;
         }
-        for (int i = 1; i <= n; i++) {
+        for (int i = 1; i <= n; i++)
             mx[i] = max(mx[i - 1], inp[i]);
-            inp[i] = min(inp[i], mx[i - 1]);
-        }
         vector<vector<int>> quer(n + 1);
         vector<int> lef(n + 1);
         vector<int> rig(n + 1);
@@ -70,9 +68,9 @@ int main() {
         }
         vector<int> delt(n + 1);
         for (int i = 1; i <= n; i++) {
-            cout << "i = " << i << ", lef = " << lef[i] << ", el = " << inp[i] << endl;
+            cout << "i = " << i << ", lef = " << lef[i] << ", rig = " << mx[i - 1] << ", " << inp[i] << endl;
             delt[lef[i]]++;
-            delt[inp[i]]--;
+            delt[min(mx[i - 1], inp[i])]--;
         }
         int cur = 0;
         for (int i = 0; i < n; i++) {
