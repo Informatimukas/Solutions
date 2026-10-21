@@ -70,13 +70,13 @@ int main() {
         int n;
         cin >> n;
         vector<int> forb(n + 1);
-        vector mn(n + 1, n + 1);
+        vector mn(n + 1, -1);
         for (int i = 1; i <= n; i++) {
             int a;
             cin >> a;
             for (int j = 0; j < a; j++) {
                 int lef = j * i, rig = min(n, (j + 1) * i);
-                mn[rig] = min(mn[rig], lef);
+                mn[rig] = max(mn[rig], lef);
             }
             int lef = a * i, rig = min(n, (a + 1) * i);
             if (lef < rig) {
@@ -92,10 +92,10 @@ int main() {
         int has = 1;
         vector<pos> st(4 * (n + 1));
         for (int i = 0; i <= n; i++) {
-            if (mn[i] <= i) {
+            if (mn[i] > -1) {
                 has = 0;
                 if (0 < mn[i])
-                    Clear(st, 1, 0, n - 1, 0, mn[i - 1]);
+                    Clear(st, 1, 0, n - 1, 0, mn[i] - 1);
             }
             if (i < n && !forb[i]) {
                 int got = i > 0 ? Get(st, 1, 0, n - 1, 0, i - 1) : 0;
