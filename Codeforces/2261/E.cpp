@@ -1,21 +1,23 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+constexpr int nil = 500000;
+constexpr int Maxn = 1000000;
+
+vector<int> mx(Maxn);
+
 bool Check(int need, int k, const string& s) {
-    int good = 0, bad = 0;
-    int l = 0, r = 0;
-    while (true) {
-        if (bad > k) {
-            if (s[l++] == '(')
-                good--;
-            else bad--;
-        } else if (good - bad < need) {
-            if (r >= s.length())
-                return false;
-            if (s[r++] == '(')
-                good++;
-            else bad++;
-        } else return true;
+    int nil = s.length();
+    fill(mx.begin(), mx.begin() + 2 * nil + 1, -1000000000);
+    int st = nil;
+    int bad = 0;
+    mx[st] = bad;
+    for (int i = 0; i < s.length(); i++) {
+        st += s[i] == '(' ? 1 : -1;
+        bad += s[i] == ')';
+        if (st - need >= 0 && bad - mx[st - need] <= k)
+            return true;
+        mx[st] = bad;
     }
     return false;
 }
