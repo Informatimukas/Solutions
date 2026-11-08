@@ -48,16 +48,22 @@ int main() {
             cout << endl;
             continue;
         }
-        int pat = uniform_int_distribution(1, (1 << 15) - 2)(rng);
-        int opat = ((1 << 15) - 1) ^ pat;
-        int off = (pat << 15) | opat;
-        got = Send(mid, off);
-        int ogot = got ^ off ^ mid;
+        int pat1, pat2;
+        do {
+            pat1 = uniform_int_distribution(1, (1 << 15) - 1)(rng);
+            pat2 = uniform_int_distribution(1, (1 << 15) - 1)(rng);
+        } while (pat1 == pat2);
+        int opat1 = ((1 << 15) - 1) ^ pat1;
+        int off1 = (pat1 << 15) | opat1;
+        int opat2 = ((1 << 15) - 1) ^ pat2;
+        int off2 = (pat2 << 15) | opat2;
+        got = Send(off2, off1);
+        int ogot = got ^ off1 ^ off2;
         int p1 = (got >> 15);
         int p2 = ((1 << 15) - 1) & got;
         int p3 = ogot >> 15;
         int p4 = ((1 << 15) - 1) & ogot;
-        if (p1 == pat && p3 == 0 || p2 == pat && p4 == 0)
+        if (p1 == pat1 && p3 == pat2 || p2 == pat1 && p4 == pat2)
             cout << "1";
         else cout << "0";
         cout << endl;
