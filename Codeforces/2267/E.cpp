@@ -4,44 +4,44 @@ using namespace std;
 using ll = long long;
 
 struct node {
-    array<ll, 2> L{}, R{};
+    array<ll, 2> cnt{};
     ll res{};
 };
 
 node Union(const node& a, const node& b) {
     node c;
-    c.L[0] = a.L[0] + a.L[0] * b.L[0] + a.L[1] * b.L[1];
-    c.L[1] = a.L[1] + a.L[0] * b.L[1] + a.L[1] * b.L[0];
-    c.R[0] = b.R[0] + b.R[0] * a.R[0] + b.R[1] * a.R[1];
-    c.R[1] = b.R[1] + b.R[0] * a.R[1] + b.R[1] * a.R[0];
-    c.res = a.res + b.res + a.R[0] * b.L[1] + a.R[1] * b.L[0];
+    for (int i = 0; i < 2; i++)
+        c.cnt[i] = a.cnt[i] + b.cnt[i];
+    c.res = a.cnt[0] * b.cnt[1] + a.cnt[1] * b.cnt[0];
     return c;
 }
 
-void Create(vector<node>& st, int v, int l, int r, const vector<int>& a) {
+void Create(vector<node>& st, int v, int l, int r, const string& s) {
     if (l == r) {
-        st[v].L[a[l]] = st[v].R[a[l]] = 1;
-        st[v].L[!a[l]] = st[v].R[!a[l]] = 0;
-        st[v].res = st[v].L[1];
+        bool val = s[l] == '1';
+        st[v].cnt[val] = 1;
+        st[v].cnt[!val] = 0;
+        st[v].res = 0;
         return;
     }
     int m = (l + r) / 2;
-    Create(st, 2 * v, l, m, a);
-    Create(st, 2 * v + 1, m + 1, r, a);
+    Create(st, 2 * v, l, m, s);
+    Create(st, 2 * v + 1, m + 1, r, s);
     st[v] = Union(st[2 * v], st[2 * v + 1]);
 }
 
-void Update(vector<node>& st, int v, int l, int r, int x, const vector<int>& a) {
+void Update(vector<node>& st, int v, int l, int r, int x, const string& s) {
     if (l == r) {
-        st[v].L[a[l]] = st[v].R[a[l]] = 1;
-        st[v].L[!a[l]] = st[v].R[!a[l]] = 0;
-        st[v].res = st[v].L[1];
+        bool val = s[l] == '1';
+        st[v].cnt[val] = 1;
+        st[v].cnt[!val] = 0;
+        st[v].res = 0;
         return;
     }
     int m = (l + r) / 2;
     if (x <= m)
-        Update(st, 2 * v, l, m, x, a);
-    else Update(st, 2 * v + 1, m + 1, r, x, a);
+        Update(st, 2 * v, l, m, x, s);
+    else Update(st, 2 * v + 1, m + 1, r, x, s);
     st[v] = Union(st[2 * v], st[2 * v + 1]);
 }
 
@@ -55,24 +55,14 @@ int main() {
         cin >> n >> q;
         string s;
         cin >> s;
-        vector<int> a(n);
-        for (int i = 1; i < n; i++)
-            a[i] = s[i] != s[i - 1];
         vector<node> st(4 * n);
-        Create(st, 1, 1, n - 1, a);
-        cout << "create" << endl;
+        Create(st, 1, 0, n - 1, s);
         cout << st[1].res;
         for (int i = 0; i < q; i++) {
             int x;
             cin >> x;
-            if (x < n) {
-                a[x] = !a[x];
-                Update(st, 1, 1, n - 1, x, a);
-            }
-            if (x > 1) {
-                a[x - 1] = !a[x - 1];
-                Update(st, 1, 1, n - 1, x - 1, a);
-            }
+            s[x - 1] = s[x - 1] == '0' ? '1' : '0';
+            Update(st, 1, 0, n - 1, x, s);
             cout << " " << st[1].res;
         }
         cout << "\n";
