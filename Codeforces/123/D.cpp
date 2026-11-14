@@ -1,0 +1,122 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+const int Maxn = 200005;
+
+string s;
+int slen;
+int rnk[Maxn];
+int cur[Maxn];
+int cnt[Maxn], nxt[Maxn];
+bool dif1[Maxn], dif2[Maxn];
+
+int bef[Maxn], plcp[Maxn];
+int lcp[Maxn];
+
+bool Less(const int &a, const int &b) { return s[a] < s[b]; }
+
+void buildSA()
+{
+    for (int i = 0; i < slen; i++)
+        cur[i] = i;
+    sort(cur, cur + slen, Less);
+    for (int i = 0; i < slen; i++) {
+        dif1[i] = i == 0 || s[cur[i - 1]] != s[cur[i]];
+        dif2[i] = false;
+    }
+    for (int h = 1; h < slen; h <<= 1) {
+        int buck = 0;
+        for (int i = 0, j; i < slen; i = j) {
+            j = i + 1;
+            while (j < slen && !dif1[j]) j++;
+            nxt[i] = j;
+            buck++;
+        }
+        if (buck == slen) break;
+        for (int i = 0; i < slen; i = nxt[i]) {
+            cnt[i] = 0;
+            for (int j = i; j < nxt[i]; j++)
+                rnk[cur[j]] = i;
+        }
+        cnt[rnk[slen - h]]++; dif2[rnk[slen - h]] = true;
+        for (int i = 0; i < slen; i = nxt[i]) {
+            for (int j = i; j < nxt[i]; j++) {
+                int s = cur[j] - h;
+                if (s >= 0) {
+                    int head = rnk[s];
+                    rnk[s] = head + cnt[head]++;
+                    dif2[rnk[s]] = true;
+                }
+            }
+            for (int j = i; j < nxt[i]; j++) {
+                int s = cur[j] - h;
+                if (s >= 0 && dif2[rnk[s]])
+                    for (int k = rnk[s] + 1; !dif1[k] && dif2[k]; k++) dif2[k] = false;
+            }
+        }
+        for (int i = 0; i < slen; i++) {
+            cur[rnk[i]] = i;
+            dif1[i] |= dif2[i];
+        }
+    }
+}
+
+void calcLCP()
+{
+    bef[cur[0]] = -1;
+    for (int i = 1; i < slen; i++) bef[cur[i]] = cur[i - 1];
+    int l = 0;
+    for (int i = 0; i < slen; i++) if (bef[i] != -1) {
+        while (bef[i] + l < slen && i + l < slen && s[bef[i] + l] == s[i + l]) l++;
+        plcp[i] = l;
+        l = max(l - 1, 0);
+    }
+    for (int i = 0; i < slen; i++)
+        lcp[i] = plcp[cur[i]];
+}
+
+using ll = long long;
+
+struct UnionSet {
+    vector<int> par, siz, len;
+    ll res{0};
+    UnionSet(int n): par(n), siz(n, 1), len(n) {
+        iota(par.begin(), par.end(), 0);
+        for (int i = 0; i < n; i++)
+            len[i] = n - cur[i];
+    }
+    int getPar(int x) { return par[x] == x ? x : par[x] = getPar(par[x]); }
+    void goTo(int root, int l) {
+        res += static_cast<ll>(siz[root]) * (siz[root] + 1) / 2 * (len[root] - l);
+        len[root] = l;
+    }
+    void unionSet(int a, int b, int l) {
+        a = getPar(a), b = getPar(b);
+        goTo(a, l);
+        goTo(b, l);
+        if (siz[a] < siz[b])
+            swap(a, b);
+        siz[a] += siz[b];
+        par[b] = a;
+    }
+};
+
+int main()
+{
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+    cin >> s;
+    slen = s.length();
+    buildSA();
+    calcLCP();
+    vector<vector<int>> wh(slen + 1);
+    for (int i = 1; i < slen; i++)
+        wh[lcp[i]].push_back(i);
+    UnionSet US(slen);
+    for (int i = slen; i >= 0; i--)
+        for (auto x : wh[i])
+            US.unionSet(x, x - 1, i);
+    US.goTo(US.getPar(0), 0);
+    cout << US.res << "\n";
+    return 0;
+}
