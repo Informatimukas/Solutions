@@ -4,23 +4,27 @@ using namespace std;
 using ll = long long;
 
 struct node {
-    array<ll, 2> cnt{};
+    array<ll, 2> cnt{}, to{};
     ll res{};
 };
 
 node Union(const node& a, const node& b) {
     node c;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++) {
         c.cnt[i] = a.cnt[i] + b.cnt[i];
-    c.res = a.cnt[0] * b.cnt[1] + a.cnt[1] * b.cnt[0];
+        c.to[i] = a.to[i] + b.to[i];
+    }
+    c.res = a.res + b.res + a.cnt[0] * b.to[1] + a.cnt[1] * b.to[0];
     return c;
 }
 
 void Create(vector<node>& st, int v, int l, int r, const string& s) {
     if (l == r) {
-        bool val = s[l] == '1';
-        st[v].cnt[val] = 1;
-        st[v].cnt[!val] = 0;
+        int cur = s[l] == '1';
+        st[v].cnt[cur] = 1;
+        st[v].cnt[!cur] = 0;
+        st[v].to[cur] = l > 0 && s[l - 1] != s[l] ? s.length() - l : 0;
+        st[v].to[!cur] = 0;
         st[v].res = 0;
         return;
     }
@@ -32,9 +36,11 @@ void Create(vector<node>& st, int v, int l, int r, const string& s) {
 
 void Update(vector<node>& st, int v, int l, int r, int x, const string& s) {
     if (l == r) {
-        bool val = s[l] == '1';
-        st[v].cnt[val] = 1;
-        st[v].cnt[!val] = 0;
+        int cur = s[l] == '1';
+        st[v].cnt[cur] = 1;
+        st[v].cnt[!cur] = 0;
+        st[v].to[cur] = l > 0 && s[l - 1] != s[l] ? s.length() - l : 0;
+        st[v].to[!cur] = 0;
         st[v].res = 0;
         return;
     }
@@ -62,7 +68,9 @@ int main() {
             int x;
             cin >> x;
             s[x - 1] = s[x - 1] == '0' ? '1' : '0';
-            Update(st, 1, 0, n - 1, x, s);
+            Update(st, 1, 0, n - 1, x - 1, s);
+            if (x < n)
+                Update(st, 1, 0, n - 1, x, s);
             cout << " " << st[1].res;
         }
         cout << "\n";
